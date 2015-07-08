@@ -59,10 +59,10 @@
         End Get
     End Property
 
-    Sub New(ByVal Name As String, ByVal Population As Decimal, ByVal Capacity As Decimal, ByVal TechnologyBenefit As Byte, ByVal MoneyBenefit As Byte, ByVal Resources As Byte, Art As String, Colour As ConsoleColor)
+    Sub New(ByVal Name As String, Location As Long, ByVal Population As Decimal, ByVal Capacity As Decimal, ByVal TechnologyBenefit As Byte, ByVal MoneyBenefit As Byte, ByVal Resources As Byte, Art As String, Colour As ConsoleColor)
 
-        MyBase.New(Name, Population, Capacity, Resources, Colour, Art)
-        
+        MyBase.New(Name, Location, Population, Capacity, Resources, Colour, Art)
+
         Me.MyResearch = TechnologyBenefit
         Me.Income = MoneyBenefit
         Me.Focus = ProductionFocus.Balanced

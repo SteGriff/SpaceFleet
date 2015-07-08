@@ -9,14 +9,15 @@
     Public Function GeneratePlanets() As Planet()
 
         Dim Planets As New List(Of Planet)
-        Dim Stars As New List(Of String)
+        Dim Stars As New List(Of Star)
 
         For s As Integer = 0 To 100
 
-            Dim ThisStar As String = GenerateStarName()
+            Dim StarPlanetsHaveGreekLetters As Boolean = (Randomiser.Next(2) = 0)
+            Dim ThisStar As New Star(GenerateStarName(), s, StarPlanetsHaveGreekLetters)
             Stars.Add(ThisStar)
 
-            For p As Integer = 0 To Randomiser.Next(15)
+            For p As Integer = 1 To Randomiser.Next(15)
                 'Attempt to create 15 planets
                 ' Some will be skipped to produce more interesting patterns
 
@@ -32,30 +33,32 @@
 
     End Function
 
-    Public Function GeneratePlanet(Star As String, Number As Integer) As Planet
+    Public Function GeneratePlanet(Star As Star, Number As Integer) As Planet
 
         Dim Name As String = ""
 
-        If Randomiser.Next(1) = 0 Then
-            Name = Star & "-" & RomanNumeral(Number)
+        If Star.PlanetsHaveGreekLetters Then
+            Name = Star.Name & "-" & GreekLetter(Number)
         Else
-            Name = Star & "-" & GreekLetter(Number)
+            Name = Star.Name & "-" & RomanNumeral(Number)
         End If
 
         'Size is temporary field used to calculate capacity, art, etc.
         ' 1 to 6
-        Dim Size As Integer = 1 + Randomiser.Next(5)
+        Dim Size As Integer = 1 + Randomiser.Next(6)
 
         ' Use Art 0 to 5
         Dim Art As String = PlanetArt(Size)
         Dim Colour As ConsoleColor = RandomConsoleColour()
 
         Dim Capacity As Decimal = Size * (1 + Randomiser.NextDouble()) * 4
-        Dim Population As Decimal = Capacity / (5 + Randomiser.Next(5))
+        Dim Population As Decimal = Capacity / (5 + Randomiser.Next(6))
 
         Dim Resources As Byte = Size * Randomiser.Next(10, 40)
 
-        Dim Planet As New Planet(Name, Population, Capacity, Resources, Colour, Art)
+        Dim Location As Long = Star.Location + (2 * Number)
+
+        Dim Planet As New Planet(Name, Location, Population, Capacity, Resources, Colour, Art)
 
         Return Planet
 
@@ -78,30 +81,38 @@
 
     Public Function GenerateStarName() As String
 
-        Dim Parts1() As String = {"Aer", "Bar", "Cret", "Don", "Eol", "Fler", "Gon", "Hyp", "Ion", "Jace", "Kin", "Kar", "Lin", "Mor", "Nas", "Opa", "Pre", "Prese", "Quas", "Quor", "Rin", "Sen", "Sys", "Tine", "Tigas", "Umb", "Umbri", "Vac", "Vico", "Ward", "Xen", "Yin", "Zen"}
-        Dim Parts2() As String = {"ion", "erion", "sen", "sec", "nac", "niz", "los", "lobe", "ten", "tera", "pio", "bio", "neo", "leo", "tora", "tres", "char", "ia", "io"}
+        Dim Set1Starts() As String = {"Aer", "Bar", "Cret", "Don", "Eol", "Fler", "Gon", "Hyp", "Ion", "Iris", "Jac", "Kin", "Kar", "Lin", "Mor", "Nas", "Op", "Prel", "Pres", "Quas", "Quor", "Rin", "Sen", "Sys", "Syst", "Tin", "Tigas", "Trac", "Umbr", "Vac", "Vic", "Ward", "Xent", "Yenc", "Yint", "Zen", "Zentr"}
+        Dim Set1Ends() As String = {"ion", "erion", "sen", "sec", "nac", "niz", "los", "lobe", "ten", "tera", "pio", "bio", "neo", "leo", "tora", "tres", "char", "ia", "io"}
 
-        Dim Letters() As String = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"}
+        Dim Set2Starts() As String = {"Ace", "Aceta", "Belu", "Buta", "Cigo", "Copa", "Delo", "Doxo", "Etna", "Fogo", "Firba", "Gala", "Gilo", "Hopre", "Hapni", "Iono", "Irisa", "Jace", "Opa", "Pre", "Prese", "Tane", "Umbri", "Vico"}
+        Dim Set2Ends() As String = {"bira", "bosal", "cera", "cino", "dina", "dul", "fena", "fira", "gion", "gira", "hera", "heron", "koen", "kina", "loom", "lino", "loma", "mina", "mira", "mino", "persi", "perim", "rese", "reon", "sente", "sion", "tira", "tisa", "vera", "viso", "vico", "xen", "xena", "zeta", "zera", "zal"}
 
-        If Randomiser.Next(1) = 0 Then
-            Dim Part1 As String = Parts1(Randomiser.Next(Parts1.Length - 1))
-            Dim Part2 As String = Parts2(Randomiser.Next(Parts2.Length - 1))
-            Dim Name As String = Part1 & Part2
+        Dim Letters() As String = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A"}
 
-            If Randomiser.Next(1) = 0 Then
-                Dim Number As Integer = Randomiser.Next(1000) * 5
-                Return Name & "-" & Number.ToString()
-            End If
+        Select Case Randomiser.Next(9)
+            Case 0 To 3
+                Dim Part1 As String = Set1Starts(Randomiser.Next(Set1Starts.Length - 1))
+                Dim Part2 As String = Set1Ends(Randomiser.Next(Set1Ends.Length - 1))
 
-            Return Name
-        Else
-            Dim Name As String = ""
-            For i As Integer = 0 To Randomiser.Next(3)
-                Name += Letters(Randomiser.Next(25))
-            Next
-            Dim Number As Integer = Randomiser.Next(1000) * 5
-            Return Name & "-" & Number.ToString()
-        End If
+                Return Part1 & Part2
+
+            Case 4 To 7
+                Dim Part1 As String = Set2Starts(Randomiser.Next(Set2Starts.Length - 1))
+                Dim Part2 As String = Set2Ends(Randomiser.Next(Set2Ends.Length - 1))
+
+                Return Part1 & Part2
+
+            Case Else
+                'Only if = 8
+                '2 to 4 random letters
+                Dim Name As String = ""
+                For i As Integer = 0 To 1 + Randomiser.Next(3)
+                    Name += Letters(Randomiser.Next(26))
+                Next
+                Return Name
+
+        End Select
+
 
     End Function
 

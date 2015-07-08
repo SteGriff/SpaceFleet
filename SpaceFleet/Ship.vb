@@ -6,6 +6,7 @@
     Public HP As Byte
     Public MaxHP As Byte
     Public Warp As Byte
+    Public Location As Integer
 
     Public Attack As Byte()
     Public Defence As Byte()
@@ -71,5 +72,12 @@
 
     End Function
 
+    Function BuildClonedInstance(Location As Integer) As Ship
+
+        Dim NewShip As Ship = Me.Clone()
+        NewShip.Location = Location
+        Return NewShip
+
+    End Function
 
 End Class

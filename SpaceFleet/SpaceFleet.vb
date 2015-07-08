@@ -3,6 +3,7 @@
 Module SpaceFleet
 
     Dim Randomiser As Random
+    Dim Technologies(10) As Technology
 
     Sub Main()
 
@@ -27,18 +28,20 @@ Module SpaceFleet
         Dim CurrentlyBuilding As Ship = ShipDesigns(0)
         Dim ProductionPoints As Decimal = 0
 
-        Ships.Add(CType(ShipDesigns(0).Clone(), Ship))
+        Ships.Add(CType(ShipDesigns(0).BuildClonedInstance(0), Ship))
 
         'Planet init
         Dim MyPlanets(1) As MyPlanet
-        MyPlanets(0) = New MyPlanet("Earth", 6, 16, 1, 1, 5, "O", ConsoleColor.Blue)
-        MyPlanets(1) = New MyPlanet("Mars", 1, 8, 1, 2, 1, "o", ConsoleColor.DarkRed)
+        MyPlanets(0) = New MyPlanet("Earth", 0, 6, 16, 1, 1, 5, "O", ConsoleColor.Blue)
+        MyPlanets(1) = New MyPlanet("Mars", 1, 1, 8, 1, 2, 1, "o", ConsoleColor.DarkRed)
+
+        'Which planet do ships come out of (by MyPlanet index)
+        Dim ShipBuildLocation As Integer = 0
 
         Dim PG As New PlanetGeneration(Randomiser)
         Dim Planets() As Planet = PG.GeneratePlanets()
 
         'Initialise technologise, all Lv1.
-        Dim Technologies(10) As Technology
         For This As TechnologyType = 0 To CType(9, TechnologyType)
             Technologies(This) = New Technology(This, 1)
         Next
@@ -75,9 +78,13 @@ Module SpaceFleet
 
                 Dim ShipJustBuilt As Boolean = False
                 'Production points have satisfied current build job
-                If (ProductionPoints > CurrentlyBuilding.Complexity) Then
+                If (ProductionPoints >= CurrentlyBuilding.Complexity) Then
+
+                    'Build planet location
+                    Dim BuildLocation As Integer = MyPlanets(ShipBuildLocation).Location
+
                     'Gain the ship by cloning the design into the ship roster
-                    Ships.Add(CType(CurrentlyBuilding.Clone(), Ship))
+                    Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(BuildLocation), Ship))
 
                     'Calculate leftover production pts
                     ProductionPoints -= CurrentlyBuilding.Complexity
@@ -116,14 +123,14 @@ Module SpaceFleet
                     PlanetRoster(MyPlanets)
 
                 Case ConsoleKey.S
-                    ShipRoster(Ships.ToArray(), CurrentlyBuilding)
+                    ShipRoster(Ships.ToArray(), CurrentlyBuilding, MyPlanets, ShipBuildLocation)
 
                 Case ConsoleKey.R
                     ResearchManagement(Technologies, Researching, Totals.TechIncome)
 
                 Case ConsoleKey.O
                     'orders
-                    OrdersManagement(Planets)
+                    OrdersManagement(MyPlanets, Planets, Ships.ToArray)
                     Console.ReadLine()
 
                 Case ConsoleKey.D
@@ -162,20 +169,56 @@ Module SpaceFleet
         PressReturn()
     End Sub
 
-    Private Sub DrawMap(Planets() As Planet)
+    Private Sub DrawMap(Planets() As Planet, Ships() As Ship)
 
-        For Each P As Planet In Planets
-            P.Draw()
-            Console.WriteLine()
+        'TODO Future feature - Sensors technology affect range
+        'Dim SensorRange As Integer = Technologies(TechnologyType.Sensors) * 10
+        Dim SensorRange As Integer = 100
+
+        Dim PlanetsDrawn As New List(Of String)
+
+        For Each S As Ship In Ships
+
+            Dim ShipDrawn As Boolean = False
+            Dim ViewPoint As Integer = S.Location
+
+            For Each P As Planet In Planets
+
+                If PlanetsDrawn.Contains(P.Name) Then
+                    Continue For
+                End If
+
+                If P.Location >= ViewPoint - SensorRange And P.Location <= ViewPoint + SensorRange Then
+                    P.Draw()
+                    PlanetsDrawn.Add(P.Name)
+                    Console.WriteLine()
+                End If
+
+                'Draw the ship
+                If Not ShipDrawn AndAlso P.Location > ViewPoint Then
+                    ShipDrawn = True
+                    Console.BackgroundColor = ConsoleColor.White
+                    Console.ForegroundColor = ConsoleColor.Black
+                    Console.WriteLine(">)O    {0}", S.Name)
+                    Console.BackgroundColor = ConsoleColor.Black
+                    Console.ForegroundColor = ConsoleColor.Gray
+                    Console.WriteLine()
+                End If
+
+            Next
+
         Next
+
 
     End Sub
 
 #Region "Orders"
 
-    Private Sub OrdersManagement(Planets() As Planet)
+    Private Sub OrdersManagement(MyPlanets() As Planet, Planets() As Planet, Ships() As Ship)
 
-        DrawMap(Planets)
+        Dim AllPlanets() As Planet = MyPlanets.Concat(Planets).ToArray()
+
+        DrawMap(AllPlanets, Ships)
 
     End Sub
 
@@ -185,11 +228,7 @@ Module SpaceFleet
 
     Private Sub PlanetManagement(ByRef Planets() As MyPlanet)
 
-        PlanetSelectionList(Planets)
-
-        Dim PlanetSelection As ConsoleKey = UserChoice()
-        Dim SelectedPlanetID As Short = ConvertNumberKey(PlanetSelection)
-
+        Dim SelectedPlanetID As Integer = SelectPlanet(Planets)
         Console.WriteLine(Planets(SelectedPlanetID).FocusDescription)
 
         PlanetManagementOptions()
@@ -252,37 +291,53 @@ Module SpaceFleet
         Console.WriteLine("[P]roduction focus")
 
     End Sub
-    Sub PlanetSelectionList(ByVal Planets() As MyPlanet)
+    Function SelectPlanet(ByVal Planets() As Planet) As Integer
 
-        For This As Short = 0 To CShort(Planets.Length - 1)
-            Console.WriteLine("[" & This & "] " & Planets(This).Name)
-        Next
+        Dim OK As Boolean = False
+        Do Until OK
+            For This As Short = 0 To CShort(Planets.Length - 1)
+                Console.WriteLine("[" & This & "] " & Planets(This).Name)
+            Next
 
-    End Sub
+            Dim PlanetSelection As ConsoleKey = UserChoice()
+            Dim Selection As Integer = ConvertNumberKey(PlanetSelection)
+
+            If Selection >= 0 And Selection <= CShort(Planets.Length - 1) Then
+                Return Selection
+            Else
+                Console.WriteLine("Sorry, that's not an option")
+            End If
+        Loop
+
+    End Function
+
 #End Region
 
 #Region "Ships"
 
     Sub ShipMenu()
 
+        Console.WriteLine("[L]ocation for newly built ships")
         Console.WriteLine("[P]urchase current ship instantly")
         Console.WriteLine("[D]esign ships")
         Console.WriteLine("[X] Done")
 
     End Sub
-    Sub ShipRoster(ByVal Ships() As Ship, CurrentlyBuilding As Ship)
+    Sub ShipRoster(ByVal Ships() As Ship, CurrentlyBuilding As Ship, Planets() As Planet, ShipBuildLocation As Integer)
 
         Console.WriteLine("Now building the """ & CurrentlyBuilding.DesignName.ToUpper & """ design")
         Console.WriteLine()
 
-        Console.WriteLine("FLEET")
-        Console.WriteLine("(Attack/Defence given as: Laser/Driver/Missiles)")
+        Console.WriteLine("----- FLEET ----- ")
+        'Console.WriteLine("[Laser/Driver/Missiles]")
+        Console.WriteLine()
 
         ShipColumnHeaders()
         For Each Item As Ship In Ships
             Item.Info()
         Next
 
+        Console.WriteLine()
         ShipMenu()
 
         Select Case UserChoice()
@@ -290,6 +345,9 @@ Module SpaceFleet
             Case ConsoleKey.P
                 'Purchase
 
+            Case ConsoleKey.L
+                'Location
+                SetShipBuildLocation(Planets, ShipBuildLocation)
 
             Case ConsoleKey.D
                 'Designs
@@ -298,6 +356,15 @@ Module SpaceFleet
         End Select
 
     End Sub
+
+    Private Function SetShipBuildLocation(Planets() As Planet, ShipBuildLocation As Integer) As Integer
+
+        Dim SelectedPlanetId As Integer = SelectPlanet(Planets)
+        Feedback("new ships will be produced from " + Planets(SelectedPlanetId).Name)
+
+        Return SelectedPlanetId
+
+    End Function
 
     Private Sub ShipDesigner(CurrentlyBuilding As Ship)
 

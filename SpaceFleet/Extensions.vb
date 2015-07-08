@@ -4,7 +4,7 @@
         Return Math.Round(aPopulationValue, 2)
     End Function
 
-    Function ConvertNumberKey(ByVal NumericalKey As ConsoleKey) As Short
+    Function ConvertNumberKey(ByVal NumericalKey As ConsoleKey) As Integer
         Return CInt(Right(NumericalKey.ToString, 1))
     End Function
 
