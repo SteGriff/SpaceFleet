@@ -83,7 +83,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions.vb" />
+    <Compile Include="IConsoleEntity.vb" />
+    <Compile Include="Map.vb" />
     <Compile Include="MyPlanet.vb" />
+    <Compile Include="NumberModel.vb" />
     <Compile Include="Planet.vb" />
     <Compile Include="PlanetGeneration.vb" />
     <Compile Include="ProductionFocus.vb" />

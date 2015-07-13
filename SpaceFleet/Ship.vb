@@ -1,22 +1,32 @@
 ﻿Public Class Ship
-    Implements ICloneable
+    Implements ICloneable, IConsoleEntity
 
     Public DesignName As String
     Public Name As String
     Public HP As Byte
     Public MaxHP As Byte
     Public Warp As Byte
-    Public Location As Integer
+    Public MyLocation As Integer
+    Public Destination As Integer
 
     Public Attack As Byte()
     Public Defence As Byte()
 
     Public Const InfoTemplate As String = "{0,-22}{1,-6}{2,-12}{3,-12}{4,-8}"
 
+    Public Property Location As Integer Implements IConsoleEntity.Location
+        Get
+            Return MyLocation
+        End Get
+        Set(value As Integer)
+            MyLocation = value
+        End Set
+    End Property
+
     Sub New(ByVal DesignName As String, ByVal HP As Byte, ByVal Warp As Byte, Attack As Byte(), Defence As Byte())
 
         Me.DesignName = DesignName
-        Me.Name = DesignName & "-" & Guid.NewGuid().ToString.Substring(0, 5)
+        Me.Name = DesignName & " " & Guid.NewGuid().ToString.Substring(0, 5)
         Me.HP = HP
         Me.MaxHP = HP
         Me.Warp = Warp
@@ -79,5 +89,54 @@
         Return NewShip
 
     End Function
+
+    Public Sub Draw() Implements IConsoleEntity.Draw
+
+        Dim LocationString As String = ""
+        If Moving() Then
+            'TODO show number of weeks left in transport
+            LocationString = String.Format("{0}pc -> {1}pc", Me.Location, Me.Destination)
+        Else
+            LocationString = String.Format("{0}pc", Me.Location)
+        End If
+
+        Console.BackgroundColor = ConsoleColor.White
+        Console.ForegroundColor = ConsoleColor.Black
+        Console.WriteLine(">=>{0}{1} {2}pc", vbTab, Me.Name, Me.Location)
+        Console.BackgroundColor = ConsoleColor.Black
+        Console.ForegroundColor = ConsoleColor.Gray
+
+    End Sub
+
+    Public Function Moving() As Boolean
+        Return Location <> Destination
+    End Function
+
+    Public Sub Move()
+
+        If Location < Destination Then
+            Dim NewLocation As Integer = Location + Warp
+
+            'Correct for overshoot
+            If NewLocation > Destination Then
+                NewLocation = Destination
+            End If
+
+            'Set location
+            Location = NewLocation
+
+        ElseIf Location > Destination Then
+            Dim NewLocation As Integer = Location - Warp
+
+            'Correct for overshoot
+            If NewLocation < Destination Then
+                NewLocation = Destination
+            End If
+
+            Location = NewLocation
+
+        End If
+
+    End Sub
 
 End Class

@@ -1,14 +1,24 @@
 ﻿Public Class Planet
+    Implements IConsoleEntity
 
     Public Name As String
     Public Population As Decimal ' x billion people
     Public Capacity As Decimal
-    Public Location As Integer
+    Public MyLocation As Integer
 
     Public Resources As Byte
 
     Public Colour As ConsoleColor
     Public Art As String
+
+    Public Property Location As Integer Implements IConsoleEntity.Location
+        Get
+            Return MyLocation
+        End Get
+        Set(value As Integer)
+            MyLocation = value
+        End Set
+    End Property
 
     Public Sub New(Name As String, Location As Integer, Population As Decimal, Capacity As Decimal, Resources As Byte, Colour As ConsoleColor, Art As String)
         Me.Name = Name
@@ -20,7 +30,7 @@
         Me.Art = Art
     End Sub
 
-    Public Sub Draw()
+    Public Sub Draw() Implements IConsoleEntity.Draw
 
         Console.ForegroundColor = Me.Colour
         Console.Write(Me.Art)

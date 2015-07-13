@@ -19,16 +19,19 @@ Module SpaceFleet
 
         'Ship and Ship Design init
         Dim Ships As New List(Of Ship)
-        Dim ShipDesigns(0) As Ship
+        Dim ShipDesigns As New List(Of Ship)
 
         Dim Attack As Byte() = {1, 0, 0}
         Dim Defence As Byte() = {1, 1, 1}
 
-        ShipDesigns(0) = New Ship(RaceName + " defence drone", 2, 2, Attack, Defence)
+        ShipDesigns.Add(New Ship(RaceName + " defence drone", 2, 2, Attack, Defence))
+        ShipDesigns.Add(New Ship(RaceName + " frigate", 2, 2, Attack, Defence))
+
         Dim CurrentlyBuilding As Ship = ShipDesigns(0)
         Dim ProductionPoints As Decimal = 0
 
         Ships.Add(CType(ShipDesigns(0).BuildClonedInstance(0), Ship))
+        Ships.Add(CType(ShipDesigns(1).BuildClonedInstance(100), Ship))
 
         'Planet init
         Dim MyPlanets(1) As MyPlanet
@@ -95,6 +98,12 @@ Module SpaceFleet
                 Technologies(Researching).ImproveAndCheckAdvancement(Totals.TechIncome, Technologies)
                 Money = CInt(Money + (Totals.CashIncome * TaxRate))
 
+                'Move all moving ships
+                For Each S As Ship In Ships
+                    S.Move()
+                Next
+
+                'Done with weekly jobs
                 'Display to player
                 Readout(Week, Money, Totals, Researching, Technologies, CurrentlyBuilding, ProductionPoints)
 
@@ -131,7 +140,6 @@ Module SpaceFleet
                 Case ConsoleKey.O
                     'orders
                     OrdersManagement(MyPlanets, Planets, Ships.ToArray)
-                    Console.ReadLine()
 
                 Case ConsoleKey.D
                     'diplomacy
@@ -169,58 +177,124 @@ Module SpaceFleet
         PressReturn()
     End Sub
 
-    Private Sub DrawMap(Planets() As Planet, Ships() As Ship)
+    Private Function ShipLocationDelegate(S As Ship) As Integer
+        Return S.Location
+    End Function
+
+    Private Function KeySelectionDelegate(kvp As KeyValuePair(Of Integer, Object)) As Integer
+        Return kvp.Key
+    End Function
+
+    Private Function DrawMap(Planets() As Planet, Ships() As Ship) As Dictionary(Of Integer, IConsoleEntity)
 
         'TODO Future feature - Sensors technology affect range
         'Dim SensorRange As Integer = Technologies(TechnologyType.Sensors) * 10
         Dim SensorRange As Integer = 100
 
-        Dim PlanetsDrawn As New List(Of String)
+        Dim FurthestExploredReach As Integer = Ships.Max(Function(s) (s.Location)) + SensorRange
+        Dim Entities As New Map()
+        Dim EntityMapping As New Dictionary(Of Integer, IConsoleEntity)
+        
+        Console.WriteLine("Sensor range: {0} parsecs (pc)", SensorRange)
+        Console.WriteLine("Furthest Explored Reach: {0}pc", FurthestExploredReach)
+        Console.WriteLine()
+
+        For Each P As Planet In Planets
+
+            If P.Location > FurthestExploredReach Then
+                Exit For
+            End If
+
+            Entities.Add(P.Location, P)
+        Next
 
         For Each S As Ship In Ships
+            Entities.Add(S.Location, S)
+        Next
 
-            Dim ShipDrawn As Boolean = False
-            Dim ViewPoint As Integer = S.Location
+        Dim EntityNumber As Integer = 0
 
-            For Each P As Planet In Planets
+        For Each E In Entities.OrderedByKey
 
-                If PlanetsDrawn.Contains(P.Name) Then
-                    Continue For
-                End If
+            Console.Write("{0,-8}", "[" & EntityNumber & "]")
+            EntityMapping.Add(EntityNumber, E.Value)
+            EntityNumber += 1
 
-                If P.Location >= ViewPoint - SensorRange And P.Location <= ViewPoint + SensorRange Then
-                    P.Draw()
-                    PlanetsDrawn.Add(P.Name)
-                    Console.WriteLine()
-                End If
-
-                'Draw the ship
-                If Not ShipDrawn AndAlso P.Location > ViewPoint Then
-                    ShipDrawn = True
-                    Console.BackgroundColor = ConsoleColor.White
-                    Console.ForegroundColor = ConsoleColor.Black
-                    Console.WriteLine(">)O    {0}", S.Name)
-                    Console.BackgroundColor = ConsoleColor.Black
-                    Console.ForegroundColor = ConsoleColor.Gray
-                    Console.WriteLine()
-                End If
-
-            Next
+            E.Value.Draw()
 
         Next
 
+        Return EntityMapping
 
-    End Sub
+    End Function
 
 #Region "Orders"
 
     Private Sub OrdersManagement(MyPlanets() As Planet, Planets() As Planet, Ships() As Ship)
 
         Dim AllPlanets() As Planet = MyPlanets.Concat(Planets).ToArray()
+        Dim EntityMapping = DrawMap(AllPlanets, Ships)
 
-        DrawMap(AllPlanets, Ships)
+        Console.WriteLine()
+        Console.WriteLine("Select a ship to move")
+        Dim SelectedShip As Ship = SelectShipOnMap(EntityMapping)
+
+        Console.WriteLine()
+        Console.WriteLine("Select a destination")
+        Dim SelectedEntity As IConsoleEntity = SelectAnythingOnMap(EntityMapping)
+
+        SelectedShip.Destination = SelectedEntity.Location
+        Feedback(String.Format("sending {0} en route to {1}pc", SelectedShip.Name, SelectedEntity.Location))
 
     End Sub
+
+
+    Private Function SelectAnythingOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As IConsoleEntity
+
+        Dim SelectAnything As Type = GetType(IConsoleEntity)
+
+        If EntityMapping.Count > 0 Then
+
+            Console.Write("Enter [number]: ")
+
+            Dim EntityNumber As Integer = GetNumber()
+
+            Do Until EntityMapping.ContainsKey(EntityNumber)
+                Console.Write("No such thing. Enter a number from square brackets above: ")
+                EntityNumber = GetNumber()
+            Loop
+
+            Return EntityMapping(EntityNumber)
+
+        End If
+
+        Console.WriteLine("Nothing to select")
+        Return Nothing
+
+    End Function
+
+
+    Private Function SelectShipOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As Ship
+
+        If EntityMapping.Count > 0 Then
+
+            Console.Write("Enter [ship number]: ")
+
+            Dim ShipNumber As Integer = GetNumber()
+
+            Do Until EntityMapping.ContainsKey(ShipNumber) AndAlso TypeOf EntityMapping(ShipNumber) Is Ship
+                Console.Write("No such ship. Enter a [ship number] from above: ")
+                ShipNumber = GetNumber()
+            Loop
+
+            Return CType(EntityMapping(ShipNumber), Ship)
+
+        End If
+
+        Console.WriteLine("You have no ships")
+        Return Nothing
+
+    End Function
 
 #End Region
 
@@ -495,5 +569,33 @@ Module SpaceFleet
         PressReturn()
 
     End Sub
+
+    Public Function GetNumber() As NumberModel
+        Dim InputString = Console.ReadLine
+
+        Dim InputModel As New NumberModel(0, False)
+        Dim InputNumber As Integer = 0
+        Dim Valid As Boolean = False
+
+        Do Until Valid Or InputModel.Cancelled
+
+            Valid = Int32.TryParse(InputString, InputNumber)
+
+            If Not Valid Then
+
+                If InputString.ToLower() = "x" Then
+                    InputModel.Cancel()
+                Else
+                    Console.Write("Invalid number, try again: ")
+                    InputString = Console.ReadLine
+                End If
+
+            End If
+
+        Loop
+
+        Return InputModel
+
+    End Function
 
 End Module
