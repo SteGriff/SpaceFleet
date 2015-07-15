@@ -1,7 +1,7 @@
 ﻿Public Class Planet
     Implements IConsoleEntity
 
-    Public Name As String
+    Public MyName As String
     Public Population As Decimal ' x billion people
     Public Capacity As Decimal
     Public MyLocation As Integer
@@ -17,6 +17,15 @@
         End Get
         Set(value As Integer)
             MyLocation = value
+        End Set
+    End Property
+
+    Public Property Name As String Implements IConsoleEntity.Name
+        Get
+            Return MyName
+        End Get
+        Set(value As String)
+            MyName = value
         End Set
     End Property
 

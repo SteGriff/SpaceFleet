@@ -237,11 +237,21 @@ Module SpaceFleet
 
         Console.WriteLine()
         Console.WriteLine("Select a ship to move")
-        Dim SelectedShip As Ship = SelectShipOnMap(EntityMapping)
+        Dim SelectedShip = SelectShipOnMap(EntityMapping)
+
+        If SelectedShip.Name = "" Then
+            Feedback("no changes made")
+            Return
+        End If
 
         Console.WriteLine()
         Console.WriteLine("Select a destination")
         Dim SelectedEntity As IConsoleEntity = SelectAnythingOnMap(EntityMapping)
+
+        If SelectedEntity.Name = "" Then
+            Feedback("no changes made")
+            Return
+        End If
 
         SelectedShip.Destination = SelectedEntity.Location
         Feedback(String.Format("sending {0} en route to {1}pc", SelectedShip.Name, SelectedEntity.Location))
@@ -255,16 +265,17 @@ Module SpaceFleet
 
         If EntityMapping.Count > 0 Then
 
-            Console.Write("Enter [number]: ")
+            Dim Selection = GetNumber("Enter [number]: ")
 
-            Dim EntityNumber As Integer = GetNumber()
+            If Selection.Cancelled Then
+                Return New Ship()
+            End If
 
-            Do Until EntityMapping.ContainsKey(EntityNumber)
-                Console.Write("No such thing. Enter a number from square brackets above: ")
-                EntityNumber = GetNumber()
+            Do Until EntityMapping.ContainsKey(Selection.Number)
+                Selection = GetNumber("No such thing. Enter a number from square brackets above: ")
             Loop
 
-            Return EntityMapping(EntityNumber)
+            Return EntityMapping(Selection.Number)
 
         End If
 
@@ -273,21 +284,21 @@ Module SpaceFleet
 
     End Function
 
-
     Private Function SelectShipOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As Ship
 
         If EntityMapping.Count > 0 Then
 
-            Console.Write("Enter [ship number]: ")
+            Dim ShipSelection = GetNumber("Enter [ship number] or 'x' to cancel: ")
 
-            Dim ShipNumber As Integer = GetNumber()
+            If ShipSelection.Cancelled Then
+                Return New Ship()
+            End If
 
-            Do Until EntityMapping.ContainsKey(ShipNumber) AndAlso TypeOf EntityMapping(ShipNumber) Is Ship
-                Console.Write("No such ship. Enter a [ship number] from above: ")
-                ShipNumber = GetNumber()
+            Do Until EntityMapping.ContainsKey(ShipSelection.Number) AndAlso TypeOf EntityMapping(ShipSelection.Number) Is Ship
+                ShipSelection = GetNumber("No such ship. Enter a [ship number] from above or'x': ")
             Loop
 
-            Return CType(EntityMapping(ShipNumber), Ship)
+            Return CType(EntityMapping(ShipSelection.Number), Ship)
 
         End If
 
@@ -570,7 +581,9 @@ Module SpaceFleet
 
     End Sub
 
-    Public Function GetNumber() As NumberModel
+    Public Function GetNumber(Question As String) As NumberModel
+
+        Console.Write(Question)
         Dim InputString = Console.ReadLine
 
         Dim InputModel As New NumberModel(0, False)
@@ -581,7 +594,11 @@ Module SpaceFleet
 
             Valid = Int32.TryParse(InputString, InputNumber)
 
-            If Not Valid Then
+            If Valid Then
+
+                InputModel.Number = InputNumber
+
+            Else
 
                 If InputString.ToLower() = "x" Then
                     InputModel.Cancel()

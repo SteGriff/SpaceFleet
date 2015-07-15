@@ -2,7 +2,7 @@
     Implements ICloneable, IConsoleEntity
 
     Public DesignName As String
-    Public Name As String
+    Public MyName As String
     Public HP As Byte
     Public MaxHP As Byte
     Public Warp As Byte
@@ -11,6 +11,8 @@
 
     Public Attack As Byte()
     Public Defence As Byte()
+
+    Public Shared NullShip As New Ship()
 
     Public Const InfoTemplate As String = "{0,-22}{1,-6}{2,-12}{3,-12}{4,-8}"
 
@@ -22,6 +24,20 @@
             MyLocation = value
         End Set
     End Property
+
+    Public Property Name As String Implements IConsoleEntity.Name
+        Get
+            Return MyName
+        End Get
+        Set(value As String)
+            MyName = value
+        End Set
+    End Property
+
+    Sub New()
+        Me.DesignName = ""
+        Me.Name = ""
+    End Sub
 
     Sub New(ByVal DesignName As String, ByVal HP As Byte, ByVal Warp As Byte, Attack As Byte(), Defence As Byte())
 
@@ -102,11 +118,24 @@
 
         Console.BackgroundColor = ConsoleColor.White
         Console.ForegroundColor = ConsoleColor.Black
-        Console.WriteLine(">=>{0}{1} {2}pc", vbTab, Me.Name, Me.Location)
+        Console.WriteLine("{0}{1}{2} {3}pc", Me.Art(), vbTab, Me.Name, Me.Location)
         Console.BackgroundColor = ConsoleColor.Black
         Console.ForegroundColor = ConsoleColor.Gray
 
     End Sub
+
+    Public Function Art() As String
+
+        Dim Images() As String = {">", "}>", "}->", "}=>", "}]=>"}
+        Dim Size As Integer = Math.Floor(MaxHP / 20)
+
+        If Size > 4 Then
+            Size = 4
+        End If
+
+        Return Images(Size)
+
+    End Function
 
     Public Function Moving() As Boolean
         Return Location <> Destination
