@@ -90,6 +90,8 @@
     <Compile Include="Planet.vb" />
     <Compile Include="PlanetGeneration.vb" />
     <Compile Include="ProductionFocus.vb" />
+    <Compile Include="Race.vb" />
+    <Compile Include="RaceGeneration.vb" />
     <Compile Include="Ship.vb" />
     <Compile Include="SpaceFleet.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />

@@ -33,16 +33,20 @@ Module SpaceFleet
         Ships.Add(CType(ShipDesigns(0).BuildClonedInstance(0), Ship))
         Ships.Add(CType(ShipDesigns(1).BuildClonedInstance(100), Ship))
 
-        'Planet init
-        Dim MyPlanets(1) As MyPlanet
-        MyPlanets(0) = New MyPlanet("Earth", 0, 6, 16, 1, 1, 5, "O", ConsoleColor.Blue)
-        MyPlanets(1) = New MyPlanet("Mars", 1, 1, 8, 1, 2, 1, "o", ConsoleColor.DarkRed)
+        'Initialise friendly planets
+        Dim Planets As New List(Of Planet)
+        Planets.Add(New MyPlanet("Earth", 0, 6, 16, 1, 1, 5, "O", ConsoleColor.Blue))
+        Planets.Add(New MyPlanet("Mars", 1, 1, 8, 1, 2, 1, "o", ConsoleColor.DarkRed))
 
-        'Which planet do ships come out of (by MyPlanet index)
-        Dim ShipBuildLocation As Integer = 0
+        'Initialise foreign planets
+        Dim PlanetGenerator As New PlanetGeneration(Randomiser)
+        Dim StrangePlanets = PlanetGenerator.GeneratePlanets()
 
-        Dim PG As New PlanetGeneration(Randomiser)
-        Dim Planets() As Planet = PG.GeneratePlanets()
+        'Consolidate all planets in single array
+        Planets = Planets.Concat(StrangePlanets).ToList()
+
+        'Which planet do ships come out of (by Planet index)
+        Dim ConstructionPlanet As Planet = Planets(0)
 
         'Initialise technologise, all Lv1.
         For This As TechnologyType = 0 To CType(9, TechnologyType)
@@ -66,15 +70,17 @@ Module SpaceFleet
                 'Do civilisation growth
                 Dim PopulationGrowth As Decimal = 0
 
-                For ThisPlanet As Integer = 0 To MyPlanets.Length - 1
-                    PopulationGrowth += MyPlanets(ThisPlanet).GrowPopulation()
-                    MyPlanets(ThisPlanet).GrowIncome()
-                    MyPlanets(ThisPlanet).GrowResearch()
+                For Each P As Planet In Planets
+                    If TypeOf P Is MyPlanet Then
+                        PopulationGrowth += DirectCast(P, MyPlanet).GrowPopulation()
+                        DirectCast(P, MyPlanet).GrowIncome()
+                        DirectCast(P, MyPlanet).GrowResearch()
+                    End If
                 Next
 
                 'Sum the new levels of everything (for reporting)
 
-                Totals = Totalise(MyPlanets)
+                Totals = Totalise(Planets)
 
                 'Update production
                 ProductionPoints += Totals.ProductionIncome
@@ -83,8 +89,8 @@ Module SpaceFleet
                 'Production points have satisfied current build job
                 If (ProductionPoints >= CurrentlyBuilding.Complexity) Then
 
-                    'Build planet location
-                    Dim BuildLocation As Integer = MyPlanets(ShipBuildLocation).Location
+                    'Get space-location of the planet where it was built
+                    Dim BuildLocation As Integer = ConstructionPlanet.Location
 
                     'Gain the ship by cloning the design into the ship roster
                     Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(BuildLocation), Ship))
@@ -129,17 +135,17 @@ Module SpaceFleet
             Select Case Selection
 
                 Case ConsoleKey.P
-                    PlanetRoster(MyPlanets)
+                    PlanetRoster(Planets)
 
                 Case ConsoleKey.S
-                    ShipRoster(Ships.ToArray(), CurrentlyBuilding, MyPlanets, ShipBuildLocation)
+                    ShipRoster(Ships.ToArray(), CurrentlyBuilding, Planets, ConstructionPlanet)
 
                 Case ConsoleKey.R
                     ResearchManagement(Technologies, Researching, Totals.TechIncome)
 
                 Case ConsoleKey.O
                     'orders
-                    OrdersManagement(MyPlanets, Planets, Ships.ToArray)
+                    OrdersManagement(Planets, Ships.ToArray)
 
                 Case ConsoleKey.D
                     'diplomacy
@@ -162,11 +168,15 @@ Module SpaceFleet
 
         Dim Selection As ConsoleKey = Console.ReadKey.Key
         Console.SetCursorPosition(0, Console.CursorTop - 1)
-        Console.Write(vbCrLf & "-------" & vbCrLf)
+        Divider()
 
         Return Selection
 
     End Function
+
+    Sub Divider()
+        Console.Write(vbCrLf & "-------" & vbCrLf)
+    End Sub
 
     Function NumberOfTechnologies() As Short
         Return CShort([Enum].GetValues(GetType(TechnologyType)).Length) - 1S
@@ -185,7 +195,7 @@ Module SpaceFleet
         Return kvp.Key
     End Function
 
-    Private Function DrawMap(Planets() As Planet, Ships() As Ship) As Dictionary(Of Integer, IConsoleEntity)
+    Private Function DrawMap(Planets As List(Of Planet), Ships() As Ship) As Dictionary(Of Integer, IConsoleEntity)
 
         'TODO Future feature - Sensors technology affect range
         'Dim SensorRange As Integer = Technologies(TechnologyType.Sensors) * 10
@@ -194,7 +204,7 @@ Module SpaceFleet
         Dim FurthestExploredReach As Integer = Ships.Max(Function(s) (s.Location)) + SensorRange
         Dim Entities As New Map()
         Dim EntityMapping As New Dictionary(Of Integer, IConsoleEntity)
-        
+
         Console.WriteLine("Sensor range: {0} parsecs (pc)", SensorRange)
         Console.WriteLine("Furthest Explored Reach: {0}pc", FurthestExploredReach)
         Console.WriteLine()
@@ -230,16 +240,15 @@ Module SpaceFleet
 
 #Region "Orders"
 
-    Private Sub OrdersManagement(MyPlanets() As Planet, Planets() As Planet, Ships() As Ship)
+    Private Sub OrdersManagement(Planets As List(Of Planet), Ships() As Ship)
 
-        Dim AllPlanets() As Planet = MyPlanets.Concat(Planets).ToArray()
-        Dim EntityMapping = DrawMap(AllPlanets, Ships)
+        Dim EntityMapping = DrawMap(Planets, Ships)
 
         Console.WriteLine()
         Console.WriteLine("Select a ship to move")
         Dim SelectedShip = SelectShipOnMap(EntityMapping)
 
-        If SelectedShip.Name = "" Then
+        If SelectedShip Is Nothing Then
             Feedback("no changes made")
             Return
         End If
@@ -291,7 +300,7 @@ Module SpaceFleet
             Dim ShipSelection = GetNumber("Enter [ship number] or 'x' to cancel: ")
 
             If ShipSelection.Cancelled Then
-                Return New Ship()
+                Return Nothing
             End If
 
             Do Until EntityMapping.ContainsKey(ShipSelection.Number) AndAlso TypeOf EntityMapping(ShipSelection.Number) Is Ship
@@ -311,10 +320,20 @@ Module SpaceFleet
 
 #Region "Planets"
 
-    Private Sub PlanetManagement(ByRef Planets() As MyPlanet)
+    Private Sub PlanetManagement(Planets As List(Of Planet))
 
-        Dim SelectedPlanetID As Integer = SelectPlanet(Planets)
-        Console.WriteLine(Planets(SelectedPlanetID).FocusDescription)
+        'Select a planet and cast it to MyPlanet
+        Dim SelectedPlanet As MyPlanet = DirectCast(SelectPlanet(Planets), MyPlanet)
+
+        If SelectedPlanet Is Nothing Then
+            Feedback("nothing to do here...")
+            Return
+        End If
+
+        Divider()
+
+        'Report current focus
+        Console.WriteLine(SelectedPlanet.FocusDescription)
 
         PlanetManagementOptions()
 
@@ -323,31 +342,31 @@ Module SpaceFleet
         Select Case PlanetManagementSelection
 
             Case ConsoleKey.X
-                Exit Select
+                Return
 
             Case ConsoleKey.R
-                Planets(SelectedPlanetID).Focus = ProductionFocus.Research
-                Feedback(Planets(SelectedPlanetID).FocusDescription)
+                SelectedPlanet.Focus = ProductionFocus.Research
 
             Case ConsoleKey.P
-                Planets(SelectedPlanetID).Focus = ProductionFocus.Production
-                Feedback(Planets(SelectedPlanetID).FocusDescription)
+                SelectedPlanet.Focus = ProductionFocus.Production
 
             Case ConsoleKey.B
-                Planets(SelectedPlanetID).Focus = ProductionFocus.Balanced
-                Feedback(Planets(SelectedPlanetID).FocusDescription)
+                SelectedPlanet.Focus = ProductionFocus.Balanced
 
         End Select
 
+        Feedback(SelectedPlanet.FocusDescription)
+
     End Sub
 
-    Sub PlanetRoster(ByVal Planets() As MyPlanet)
+    Sub PlanetRoster(Planets As List(Of Planet))
 
         Const Template As String = "{0,-16}{1,-10}{2,-9}{3,-8}{4,-6}{5,-9}"
-
         Console.WriteLine(Template, "Name", "Pop/Max", "Research", "Income", "Rsrcs", "Focus")
 
-        For Each Item As MyPlanet In Planets
+        Dim MyPlanets = Planets.Where(Function(P) (TypeOf P Is MyPlanet)).ToList()
+
+        For Each Item As MyPlanet In MyPlanets
             Console.WriteLine(Template, Item.Name, PopulationFormat(Item.Population) & "/" & PopulationFormat(Item.Capacity), Item.Research, Item.Income, Item.Resources, Item.Focus)
         Next
 
@@ -357,7 +376,7 @@ Module SpaceFleet
         Select Case PlanetMenuSelection
 
             Case ConsoleKey.M
-                PlanetManagement(Planets)
+                PlanetManagement(MyPlanets)
 
         End Select
 
@@ -370,29 +389,47 @@ Module SpaceFleet
     End Sub
     Sub PlanetManagementOptions()
 
-        Console.WriteLine("[X] Cancel")
         Console.WriteLine("[B]alanced focus")
         Console.WriteLine("[R]esearch focus")
         Console.WriteLine("[P]roduction focus")
+        Console.WriteLine("[X] Cancel")
 
     End Sub
-    Function SelectPlanet(ByVal Planets() As Planet) As Integer
+    Function DrawPlanetList(Planets As List(Of Planet)) As Dictionary(Of Integer, IConsoleEntity)
 
-        Dim OK As Boolean = False
-        Do Until OK
-            For This As Short = 0 To CShort(Planets.Length - 1)
-                Console.WriteLine("[" & This & "] " & Planets(This).Name)
-            Next
+        Dim EntityMapping As New Dictionary(Of Integer, IConsoleEntity)
 
-            Dim PlanetSelection As ConsoleKey = UserChoice()
-            Dim Selection As Integer = ConvertNumberKey(PlanetSelection)
+        For This As Short = 0 To CShort(Planets.Count - 1)
+            EntityMapping.Add(This, Planets(This))
+            Console.WriteLine("[" & This & "] " & Planets(This).Name)
+        Next
 
-            If Selection >= 0 And Selection <= CShort(Planets.Length - 1) Then
-                Return Selection
-            Else
-                Console.WriteLine("Sorry, that's not an option")
+        Return EntityMapping
+
+    End Function
+    Function SelectPlanet(Planets As List(Of Planet)) As Planet
+
+        Planets = Planets.Where(Function(P) (TypeOf P Is MyPlanet)).ToList()
+        Dim EntityMapping = DrawPlanetList(Planets)
+
+        If EntityMapping.Count > 0 Then
+
+            Dim Selection = GetNumber("Enter [number] or 'x' to cancel: ")
+
+            If Selection.Cancelled Then
+                Return Nothing
             End If
-        Loop
+
+            Do Until EntityMapping.ContainsKey(Selection.Number) AndAlso TypeOf EntityMapping(Selection.Number) Is Planet
+                Selection = GetNumber("No such planet. Enter a [number] from above or'x': ")
+            Loop
+
+            Return CType(EntityMapping(Selection.Number), Planet)
+
+        End If
+
+        Console.WriteLine("You have no planets")
+        Return Nothing
 
     End Function
 
@@ -408,9 +445,10 @@ Module SpaceFleet
         Console.WriteLine("[X] Done")
 
     End Sub
-    Sub ShipRoster(ByVal Ships() As Ship, CurrentlyBuilding As Ship, Planets() As Planet, ShipBuildLocation As Integer)
+    Sub ShipRoster(ByVal Ships() As Ship, CurrentlyBuilding As Ship, Planets As List(Of Planet), ByRef ConstructionPlanet As Planet)
 
         Console.WriteLine("Now building the """ & CurrentlyBuilding.DesignName.ToUpper & """ design")
+        Console.WriteLine("Ships are produced on " & ConstructionPlanet.Name)
         Console.WriteLine()
 
         Console.WriteLine("----- FLEET ----- ")
@@ -432,7 +470,7 @@ Module SpaceFleet
 
             Case ConsoleKey.L
                 'Location
-                SetShipBuildLocation(Planets, ShipBuildLocation)
+                SetShipBuildLocation(Planets, ConstructionPlanet)
 
             Case ConsoleKey.D
                 'Designs
@@ -442,14 +480,19 @@ Module SpaceFleet
 
     End Sub
 
-    Private Function SetShipBuildLocation(Planets() As Planet, ShipBuildLocation As Integer) As Integer
+    Private Sub SetShipBuildLocation(Planets As List(Of Planet), ByRef ConstructionPlanet As Planet)
 
-        Dim SelectedPlanetId As Integer = SelectPlanet(Planets)
-        Feedback("new ships will be produced from " + Planets(SelectedPlanetId).Name)
+        Dim SelectedPlanet = SelectPlanet(Planets)
 
-        Return SelectedPlanetId
+        If SelectedPlanet Is Nothing Then
+            Feedback("ships will continue to be built on " & ConstructionPlanet.Name)
+            Return
+        End If
 
-    End Function
+        ConstructionPlanet = SelectedPlanet
+        Feedback("ships will be built on " + ConstructionPlanet.Name)
+
+    End Sub
 
     Private Sub ShipDesigner(CurrentlyBuilding As Ship)
 
@@ -538,10 +581,12 @@ Module SpaceFleet
 
     End Sub
 
-    Function Totalise(ByVal Planets() As MyPlanet) As SystemTotals
+    Function Totalise(Planets As List(Of Planet)) As SystemTotals
         Dim Pop, Cap, Tech, Cash, Prod As Decimal
 
-        For Each P As MyPlanet In Planets
+        Dim MyPlanets = Planets.Where(Function(P) (TypeOf P Is MyPlanet))
+
+        For Each P As MyPlanet In MyPlanets
             Pop += P.Population
             Cap += P.Capacity
             Cash += P.Income

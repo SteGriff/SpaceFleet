@@ -11,6 +11,8 @@
     Public Colour As ConsoleColor
     Public Art As String
 
+    Public Owner As Race
+
     Public Property Location As Integer Implements IConsoleEntity.Location
         Get
             Return MyLocation
