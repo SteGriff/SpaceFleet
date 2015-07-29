@@ -11,4 +11,24 @@
 
     End Sub
 
+    Public Sub Introduce()
+
+        Console.WriteLine("""Stranger! We are the {0} race! You will never take our systems from us!""", Me.Name)
+
+    End Sub
+
+    Public Sub DeathWail()
+
+        Console.WriteLine("""Nooooooo!! This cannot be the end of the {0}!""", Me.Name)
+
+    End Sub
+
+    Public Sub DrawFace()
+
+        Console.ForegroundColor = Colour
+        Console.Write(Face)
+        Console.ForegroundColor = ConsoleColor.Gray
+
+    End Sub
+
 End Class

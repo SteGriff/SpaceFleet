@@ -13,6 +13,7 @@
         Me.Location = Index * 10 * (Rnd(15) + 5)
         Me.PlanetsHaveGreekLetters = PlanetsHaveGreekLetters
         Me.Planets = New List(Of Planet)
+        Me.PotentialRaceNames = New List(Of String)
 
     End Sub
 

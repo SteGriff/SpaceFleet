@@ -6,15 +6,15 @@
         Me.Randomiser = Randomiser
     End Sub
 
-    Public Function GeneratePlanets() As List(Of Planet)
+    Public Function GeneratePlanets(ByRef Stars As List(Of Star)) As List(Of Planet)
 
         Dim Planets As New List(Of Planet)
-        Dim Stars As New List(Of Star)
 
         For s As Integer = 0 To 100
 
             Dim StarPlanetsHaveGreekLetters As Boolean = (Randomiser.Next(2) = 0)
             Dim ThisStar As New Star(s, StarPlanetsHaveGreekLetters)
+            GenerateAndAttachStarLanguage(ThisStar)
             Stars.Add(ThisStar)
 
             For p As Integer = 1 To Randomiser.Next(15)
@@ -81,7 +81,7 @@
 
         Dim Set2Starts() As String = {"Ace", "Aceta", "Belu", "Buta", "Cigo", "Copa", "Delo", "Doxo", "Etna", "Fogo", "Firba", "Gala", "Gilo", "Hopre", "Hapni", "Iono", "Irisa", "Jace", "Opa", "Pre", "Prese", "Tane", "Umbri", "Vico"}
         Dim Set2Ends() As String = {"bira", "bosal", "cera", "cino", "dina", "dul", "fena", "fira", "gion", "gira", "hera", "heron", "koen", "kina", "loom", "lino", "loma", "mina", "mira", "mino", "persi", "perim", "rese", "reon", "sente", "sion", "tira", "tisa", "vera", "viso", "vico", "xen", "xena", "zeta", "zera", "zal"}
-        Dim Set2RaceEnds() As String = {"biran", "bosalan", "ceran", "cinoian", "dinaian", "dulian", "fenian", "firian", "gionan", "girain", "heran", "heronian", "koenian", "kinian", "loomian", "linoan", "minan", "miran", "minon", "persian", "perimian", "resian", "reonan", "sentean", "sioan", "tiran", "tisan", "veran", "visoan", "vicoan", "xenian", "zetan", "zeran", "zalian"}
+        Dim Set2RaceEnds() As String = {"biran", "bosalan", "ceran", "cinoian", "dinaian", "dulian", "fenian", "firian", "gionan", "girian", "heran", "heronian", "koenian", "kinian", "loomian", "linoan", "lomian", "minan", "miran", "minon", "persian", "perimian", "resian", "reonan", "sentean", "sioan", "tiran", "tisan", "veran", "visoan", "vicoan", "xenian", "xenasian", "zetan", "zeran", "zalian"}
 
         Dim Letters() As String = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "A"}
 
@@ -100,7 +100,7 @@
 
                 Dim EndNumber = Randomiser.Next(Set2Ends.Length - 1)
                 Dim Part1 As String = Set2Starts(Randomiser.Next(Set2Starts.Length - 1))
-                Dim Part2 As String = Set2Ends(Randomiser.Next(Set2Ends.Length - 1))
+                Dim Part2 As String = Set2Ends(EndNumber)
                 Dim RaceEnd As String = Set2RaceEnds(EndNumber)
 
                 S.Name = Part1 & Part2

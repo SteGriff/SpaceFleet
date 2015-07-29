@@ -2,6 +2,13 @@
 
 Module SpaceFleet
 
+    ' Working title
+    '   SPACE FLEET
+    ' Or, "Hapless Galaxy", or "Unreasonable Space Conquest"
+    ' This is a cheap console game drawing on Galactic Civilisations II
+    ' It's a simplified 4X game of taking over the galaxy by force
+    ' Stephen Griffiths 2011 - 2015
+
     Dim Randomiser As Random
     Dim Technologies(10) As Technology
 
@@ -38,9 +45,10 @@ Module SpaceFleet
         Planets.Add(New MyPlanet("Earth", 0, 6, 16, 1, 1, 5, "O", ConsoleColor.Blue))
         Planets.Add(New MyPlanet("Mars", 1, 1, 8, 1, 2, 1, "o", ConsoleColor.DarkRed))
 
-        'Initialise foreign planets
+        'Initialise foreign stars and planets
+        Dim Stars As New List(Of Star)
         Dim PlanetGenerator As New PlanetGeneration(Randomiser)
-        Dim StrangePlanets = PlanetGenerator.GeneratePlanets()
+        Dim StrangePlanets = PlanetGenerator.GeneratePlanets(Stars)
 
         'Consolidate all planets in single array
         Planets = Planets.Concat(StrangePlanets).ToList()
@@ -48,10 +56,12 @@ Module SpaceFleet
         'Which planet do ships come out of (by Planet index)
         Dim ConstructionPlanet As Planet = Planets(0)
 
-        'Initialise technologise, all Lv1.
-        For This As TechnologyType = 0 To CType(9, TechnologyType)
-            Technologies(This) = New Technology(This, 1)
-        Next
+        'Generate enemy races
+        Dim EnemyGenerator As New EnemyGeneration(Randomiser)
+        Dim Enemies = EnemyGenerator.GenerateEnemies(Stars)
+
+        'Create all techs and set to Lv1.
+        InitialiseTechnologies(Technologies)
 
         Dim Researching As TechnologyType = TechnologyType.Research
 
@@ -60,6 +70,7 @@ Module SpaceFleet
         Dim Week As Integer = 0
         Dim GameOver As Boolean = False
         Dim TurnTaken As Boolean = True
+        Dim Messages As New List(Of CommsMessage)
 
         Do Until GameOver
 
@@ -107,6 +118,26 @@ Module SpaceFleet
                 'Move all moving ships
                 For Each S As Ship In Ships
                     S.Move()
+
+                    'Forgive us our O(n^2) as we forgive those...
+                    For Each E As Enemy In Enemies
+
+                        If E.HasInTerritory(S) Then
+
+                            E.Meet()
+
+                            'Check if first contact
+                            If E.Meetings = 1 Then
+                                Messages.Add(New CommsMessage(E.Race, CommsMessage.CommsKind.Introduction))
+                            End If
+
+                        End If
+
+                    Next
+
+                    'TODO check whether you're in a different race zone to last turn
+                    'N.b. fields on the Ship storing thisZone and lastZone?
+                    'Queue introduction message if new encounter
                 Next
 
                 'Done with weekly jobs
@@ -114,8 +145,12 @@ Module SpaceFleet
                 Readout(Week, Money, Totals, Researching, Technologies, CurrentlyBuilding, ProductionPoints)
 
                 If Week > 0 Then
+
+                    CommsReport(Messages)
+
                     'Give weekly report if this is not the first turn
                     WeeklyReport(Week, Technologies(Researching), PopulationGrowth, Totals, ShipJustBuilt, CurrentlyBuilding, ProductionPoints)
+
                 End If
 
                 'Initialise turn
@@ -148,7 +183,10 @@ Module SpaceFleet
                     OrdersManagement(Planets, Ships.ToArray)
 
                 Case ConsoleKey.D
-                    'diplomacy
+                    'debug
+                    If Debugger.IsAttached Then
+                        DebugStuff(Enemies)
+                    End If
 
                 Case ConsoleKey.X
                     'End turn
@@ -555,13 +593,23 @@ Module SpaceFleet
 
 #End Region
 
+    Sub InitialiseTechnologies(ByRef Techs As Technology())
+        For ThisTech As TechnologyType = 0 To CType(9, TechnologyType)
+            Techs(ThisTech) = New Technology(ThisTech, 1)
+        Next
+    End Sub
+
     Sub MainMenu()
 
         Console.WriteLine("[P]lanets")
         Console.WriteLine("[S]hips")
         Console.WriteLine("[R]esearch")
         Console.WriteLine("[O]rders")
-        Console.WriteLine("[D]iplomacy")
+
+        If Debugger.IsAttached Then
+            Console.WriteLine("[D]ebug")
+        End If
+
         Console.WriteLine("[X] End Week")
 
     End Sub
@@ -659,5 +707,49 @@ Module SpaceFleet
         Return InputModel
 
     End Function
+
+    Private Sub DebugStuff(Enemies As List(Of Enemy))
+
+        For Each E As Enemy In Enemies
+            Console.ForegroundColor = E.Race.Colour
+            Console.WriteLine("{0,8} {1,-20} {2}", E.Race.Face, E.Race.Name, E.Ability)
+            Console.ForegroundColor = ConsoleColor.Gray
+        Next
+
+        Console.ReadLine()
+
+    End Sub
+
+    Private Sub CommsReport(Messages As List(Of CommsMessage))
+
+        Dim MNum As Integer = 1
+        Dim TotalM As Integer = Messages.Count
+
+        For Each M As CommsMessage In Messages
+
+            Console.Clear()
+            Console.WriteLine()
+            Console.WriteLine("--------[ o . . ]---[ COMMS ]----[ . o o ]--------")
+            Console.WriteLine()
+            Console.WriteLine("Message {0} of {1}:", MNum, TotalM)
+
+            Console.WriteLine()
+            M.Sender.DrawFace()
+            Console.WriteLine()
+
+            'Write actual message
+            Select Case M.Kind
+                Case CommsMessage.CommsKind.Introduction
+                    M.Sender.Introduce()
+                Case CommsMessage.CommsKind.DeathWail
+                    M.Sender.DeathWail()
+            End Select
+
+            Console.WriteLine()
+            Console.WriteLine("Press a key...")
+            Console.ReadLine()
+        Next
+
+    End Sub
 
 End Module

@@ -11,7 +11,7 @@
     Public Colour As ConsoleColor
     Public Art As String
 
-    Public Owner As Race
+    Public Owner As IPlayer
 
     Public Property Location As Integer Implements IConsoleEntity.Location
         Get

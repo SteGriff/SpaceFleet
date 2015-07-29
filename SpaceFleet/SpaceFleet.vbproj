@@ -82,6 +82,8 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommsMessage.vb" />
+    <Compile Include="Enemy.vb" />
     <Compile Include="Extensions.vb" />
     <Compile Include="IConsoleEntity.vb" />
     <Compile Include="Map.vb" />
@@ -89,9 +91,10 @@
     <Compile Include="NumberModel.vb" />
     <Compile Include="Planet.vb" />
     <Compile Include="PlanetGeneration.vb" />
+    <Compile Include="IPlayer.vb" />
     <Compile Include="ProductionFocus.vb" />
     <Compile Include="Race.vb" />
-    <Compile Include="RaceGeneration.vb" />
+    <Compile Include="EnemyGeneration.vb" />
     <Compile Include="Ship.vb" />
     <Compile Include="SpaceFleet.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
