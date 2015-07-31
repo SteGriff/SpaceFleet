@@ -7,6 +7,10 @@
 
     Public ProductionPoints As Decimal
 
+    'Techs
+    Public Technologies(10) As Technology
+    Public Researching As TechnologyType = TechnologyType.Research
+
     'Ship and Ship Design init
     Public Ships As New List(Of Ship)
     Public ShipDesigns As New List(Of Ship)

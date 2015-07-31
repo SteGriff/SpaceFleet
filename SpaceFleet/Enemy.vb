@@ -5,10 +5,6 @@
     Public Ability As Integer
     Public Age As Integer
 
-    'Techs
-    Public Technologies(10) As Technology
-    Private Researching As TechnologyType = TechnologyType.Research
-
     'Territory core
     Dim HomeStar As Star
 

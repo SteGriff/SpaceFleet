@@ -10,7 +10,7 @@ Module SpaceFleet
     ' Stephen Griffiths 2011 - 2015
 
     Dim Randomiser As Random
-    Dim Technologies(10) As Technology
+    'Dim Technologies(10) As Technology
 
     Sub Main()
 
@@ -41,15 +41,12 @@ Module SpaceFleet
         'Consolidate all planets in single array
         Planets = Planets.Concat(StrangePlanets).ToList()
 
-
         'Generate enemy races
         Dim EnemyGenerator As New EnemyGeneration(Randomiser)
         Dim Enemies = EnemyGenerator.GenerateEnemies(Stars)
 
         'Create all techs and set to Lv1.
-        InitialiseTechnologies(Technologies)
-
-        Dim Researching As TechnologyType = TechnologyType.Research
+        InitialiseTechnologies(You.Technologies)
 
         Const TaxRate As Integer = 1
 
@@ -78,17 +75,15 @@ Module SpaceFleet
                 Next
 
                 'Sum the new levels of everything (for reporting)
-
                 Totals = Totalise(You.Planets)
 
                 'Update production
                 You.ProductionPoints += Totals.ProductionIncome
 
-                Dim ShipJustBuilt As Boolean = False
-                You.TryBuildShip()
+                Dim ShipJustBuilt As Boolean = You.TryBuildShip()
 
                 'Update technology and get level-up flag
-                Technologies(Researching).ImproveAndCheckAdvancement(Totals.TechIncome, Technologies)
+                You.Technologies(You.Researching).ImproveAndCheckAdvancement(Totals.TechIncome, You.Technologies)
                 You.Money = CInt(You.Money + (Totals.CashIncome * TaxRate))
 
                 'Move all moving ships
@@ -110,22 +105,18 @@ Module SpaceFleet
                         End If
 
                     Next
-
-                    'TODO check whether you're in a different race zone to last turn
-                    'N.b. fields on the Ship storing thisZone and lastZone?
-                    'Queue introduction message if new encounter
                 Next
 
                 'Done with weekly jobs
                 'Display to player
-                Readout(Week, You.Money, Totals, Researching, Technologies, You.CurrentlyBuilding, You.ProductionPoints)
+                Readout(Week, You, Totals)
 
                 If Week > 0 Then
 
                     CommsReport(Messages)
 
                     'Give weekly report if this is not the first turn
-                    WeeklyReport(Week, Technologies(Researching), PopulationGrowth, Totals, ShipJustBuilt, You.CurrentlyBuilding, You.ProductionPoints)
+                    WeeklyReport(Week, You.Technologies(You.Researching), PopulationGrowth, Totals, ShipJustBuilt, You.CurrentlyBuilding, You.ProductionPoints)
 
                 End If
 
@@ -136,7 +127,7 @@ Module SpaceFleet
 
             End If
 
-            Readout(Week, You.Money, Totals, Researching, Technologies, You.CurrentlyBuilding, You.ProductionPoints)
+            Readout(Week, You, Totals)
             MainMenu()
 
             Dim Selection As ConsoleKey = UserChoice()
@@ -150,7 +141,7 @@ Module SpaceFleet
                     ShipRoster(You)
 
                 Case ConsoleKey.R
-                    ResearchManagement(Technologies, Researching, Totals.TechIncome)
+                    ResearchManagement(You, Totals.TechIncome)
 
                 Case ConsoleKey.O
                     'orders
@@ -522,9 +513,9 @@ Module SpaceFleet
 
 #Region "Research"
 
-    Private Sub ResearchManagement(Technologies() As Technology, ByRef Researching As TechnologyType, TechIncome As Decimal)
+    Private Sub ResearchManagement(You As Player, TechIncome As Decimal)
 
-        ResearchInformation(Technologies, Researching, TechIncome)
+        ResearchInformation(You, TechIncome)
 
         ResearchMenu()
 
@@ -532,11 +523,11 @@ Module SpaceFleet
 
             Case ConsoleKey.C
                 For ThisTechnology As Short = 0 To NumberOfTechnologies()
-                    Console.Write("[" & ThisTechnology & "] " & Technologies(ThisTechnology).Field.ToString & vbTab)
-                    Console.WriteLine(Technologies(ThisTechnology).Level)
+                    Console.Write("[" & ThisTechnology & "] " & You.Technologies(ThisTechnology).Field.ToString & vbTab)
+                    Console.WriteLine(You.Technologies(ThisTechnology).Level)
                 Next
                 Dim NewResearchField As Integer = ConvertNumberKey(UserChoice())
-                Researching = CType(NewResearchField, TechnologyType)
+                You.Researching = CType(NewResearchField, TechnologyType)
 
         End Select
 
@@ -547,12 +538,12 @@ Module SpaceFleet
         Console.WriteLine("{Research list}")
 
     End Sub
-    Sub ResearchInformation(ByVal Technologies() As Technology, ByVal Researching As TechnologyType, ByVal TechIncome As Decimal)
+    Sub ResearchInformation(You As Player, ByVal TechIncome As Decimal)
 
-        Dim CurrentLevel As Decimal = Technologies(Researching).Level
-        Dim ProspectiveLevel As Decimal = Technologies(Researching).Improvement(TechIncome, Technologies)
+        Dim CurrentLevel As Decimal = You.Technologies(You.Researching).Level
+        Dim ProspectiveLevel As Decimal = You.Technologies(You.Researching).Improvement(TechIncome, You.Technologies)
 
-        Console.WriteLine("We're currently researching " & Researching.ToString.ToUpper)
+        Console.WriteLine("We're currently researching " & You.Researching.ToString.ToUpper)
         Console.WriteLine("The level to which we've researched it to date is " & CurrentLevel)
         Console.WriteLine("Next week, it will be at level " & ProspectiveLevel)
 
@@ -588,17 +579,17 @@ Module SpaceFleet
 
     End Sub
 
-    Sub Readout(ByVal Turn As Integer, ByVal Money As Integer, ByVal Totals As SystemTotals, ByVal Researching As TechnologyType, ByVal Technology() As Technology, CurrentlyBuilding As Ship, ProductionPoints As Decimal)
+    Sub Readout(ByVal Turn As Integer, You As Player, ByVal Totals As SystemTotals)
 
         Console.Clear()
         Console.WriteLine(vbNewLine & vbTab & "Week {0} | ¤ {1} | {2}/{3} billion people", _
                           Turn, _
-                          Money, _
+                          You.Money, _
                           PopulationFormat(Totals.Population), _
                           PopulationFormat(Totals.Capacity))
 
-        Console.WriteLine(vbTab & "Improving {0} (Lv {1})", Researching.ToString(), Technology(Researching).Level)
-        Console.WriteLine(vbTab & "Building a {0} ({1})", CurrentlyBuilding.DesignName, CurrentlyBuilding.PercentBuilt(ProductionPoints))
+        Console.WriteLine(vbTab & "Improving {0} (Lv {1})", You.Researching.ToString(), You.Technologies(You.Researching).Level)
+        Console.WriteLine(vbTab & "Building a {0} ({1})", You.CurrentlyBuilding.DesignName, You.CurrentlyBuilding.PercentBuilt(You.ProductionPoints))
         Console.WriteLine()
 
     End Sub
