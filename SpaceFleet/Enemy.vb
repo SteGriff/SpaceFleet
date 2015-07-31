@@ -1,7 +1,5 @@
 ﻿Public Class Enemy
-    Implements IPlayer
-
-    Public Race As Race
+    Inherits Player
 
     'Difficulty
     Public Ability As Integer
@@ -11,13 +9,8 @@
     Public Technologies(10) As Technology
     Private Researching As TechnologyType = TechnologyType.Research
 
-    'Ship and Ship Design init
-    Dim Ships As New List(Of Ship)
-    Dim ShipDesigns As New List(Of Ship)
-
-    'How far territory spreads from controlled planets
-    Private MyInfluence As Integer
-    Public Property Influence As Integer Implements IPlayer.Influence
+    'Territory core
+    Dim HomeStar As Star
 
     'Start and end of influenced territory
     Public TerritoryBegin As Integer
@@ -31,8 +24,10 @@
         End Get
     End Property
 
-    Public Sub New(R As Race, Randomiser As Random)
-        Me.Race = R
+    Public Sub New(R As Race, S As Star, Randomiser As Random)
+        MyBase.New(R)
+
+        Me.HomeStar = S
 
         'Ability (difficulty) 1 to 10; 10 is most able
         Me.Ability = Randomiser.Next(1, 11)
@@ -76,7 +71,22 @@
         'Decide what to research next turn
         DecideResearch()
 
+        'Build ships
+        If Age Mod Math.Floor(100 / Ability) = 0 Then
+            'Shortcut... build from home star for now
+            Dim NewShip = ShipDesigns(0).BuildClonedInstance(HomeStar.Location)
 
+            'Target the player's end of the lineiverse
+            NewShip.Destination = 0
+
+            Ships.Add(NewShip)
+        End If
+
+        'Move all ships
+        For Each S As Ship In Ships
+            S.Move()
+
+        Next
 
     End Sub
 

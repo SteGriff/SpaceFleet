@@ -85,6 +85,7 @@
     <Compile Include="CommsMessage.vb" />
     <Compile Include="Enemy.vb" />
     <Compile Include="Extensions.vb" />
+    <Compile Include="Human.vb" />
     <Compile Include="IConsoleEntity.vb" />
     <Compile Include="Map.vb" />
     <Compile Include="MyPlanet.vb" />
@@ -92,6 +93,7 @@
     <Compile Include="Planet.vb" />
     <Compile Include="PlanetGeneration.vb" />
     <Compile Include="IPlayer.vb" />
+    <Compile Include="Player.vb" />
     <Compile Include="ProductionFocus.vb" />
     <Compile Include="Race.vb" />
     <Compile Include="EnemyGeneration.vb" />

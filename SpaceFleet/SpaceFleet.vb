@@ -22,23 +22,8 @@ Module SpaceFleet
         Console.Write("Enter race name: ")
         Dim RaceName As String = Console.ReadLine
 
-        Dim Money As Integer = 1000
-
-        'Ship and Ship Design init
-        Dim Ships As New List(Of Ship)
-        Dim ShipDesigns As New List(Of Ship)
-
-        Dim Attack As Byte() = {1, 0, 0}
-        Dim Defence As Byte() = {1, 1, 1}
-
-        ShipDesigns.Add(New Ship(RaceName + " defence drone", 2, 2, Attack, Defence))
-        ShipDesigns.Add(New Ship(RaceName + " frigate", 2, 2, Attack, Defence))
-
-        Dim CurrentlyBuilding As Ship = ShipDesigns(0)
-        Dim ProductionPoints As Decimal = 0
-
-        Ships.Add(CType(ShipDesigns(0).BuildClonedInstance(0), Ship))
-        Ships.Add(CType(ShipDesigns(1).BuildClonedInstance(100), Ship))
+        Dim HumanRace As New Race(RaceName, "(>_<)", ConsoleColor.White)
+        Dim You As New Human(HumanRace)
 
         'Initialise friendly planets
         Dim Planets As New List(Of Planet)
@@ -94,29 +79,29 @@ Module SpaceFleet
                 Totals = Totalise(Planets)
 
                 'Update production
-                ProductionPoints += Totals.ProductionIncome
+                You.ProductionPoints += Totals.ProductionIncome
 
                 Dim ShipJustBuilt As Boolean = False
                 'Production points have satisfied current build job
-                If (ProductionPoints >= CurrentlyBuilding.Complexity) Then
+                If (You.ProductionPoints >= You.CurrentlyBuilding.Complexity) Then
 
                     'Get space-location of the planet where it was built
                     Dim BuildLocation As Integer = ConstructionPlanet.Location
 
                     'Gain the ship by cloning the design into the ship roster
-                    Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(BuildLocation), Ship))
+                    You.Ships.Add(CType(You.CurrentlyBuilding.BuildClonedInstance(BuildLocation), Ship))
 
                     'Calculate leftover production pts
-                    ProductionPoints -= CurrentlyBuilding.Complexity
+                    You.ProductionPoints -= You.CurrentlyBuilding.Complexity
                     ShipJustBuilt = True
                 End If
 
                 'Update technology and get level-up flag
                 Technologies(Researching).ImproveAndCheckAdvancement(Totals.TechIncome, Technologies)
-                Money = CInt(Money + (Totals.CashIncome * TaxRate))
+                You.Money = CInt(You.Money + (Totals.CashIncome * TaxRate))
 
                 'Move all moving ships
-                For Each S As Ship In Ships
+                For Each S As Ship In You.Ships
                     S.Move()
 
                     'Forgive us our O(n^2) as we forgive those...
@@ -142,14 +127,14 @@ Module SpaceFleet
 
                 'Done with weekly jobs
                 'Display to player
-                Readout(Week, Money, Totals, Researching, Technologies, CurrentlyBuilding, ProductionPoints)
+                Readout(Week, You.Money, Totals, Researching, Technologies, You.CurrentlyBuilding, You.ProductionPoints)
 
                 If Week > 0 Then
 
                     CommsReport(Messages)
 
                     'Give weekly report if this is not the first turn
-                    WeeklyReport(Week, Technologies(Researching), PopulationGrowth, Totals, ShipJustBuilt, CurrentlyBuilding, ProductionPoints)
+                    WeeklyReport(Week, Technologies(Researching), PopulationGrowth, Totals, ShipJustBuilt, You.CurrentlyBuilding, You.ProductionPoints)
 
                 End If
 
@@ -160,9 +145,7 @@ Module SpaceFleet
 
             End If
 
-            Dim CanSpendMoney As Boolean = (Money > 0)
-
-            Readout(Week, Money, Totals, Researching, Technologies, CurrentlyBuilding, ProductionPoints)
+            Readout(Week, You.Money, Totals, Researching, Technologies, You.CurrentlyBuilding, You.ProductionPoints)
             MainMenu()
 
             Dim Selection As ConsoleKey = UserChoice()
@@ -173,14 +156,14 @@ Module SpaceFleet
                     PlanetRoster(Planets)
 
                 Case ConsoleKey.S
-                    ShipRoster(Ships.ToArray(), CurrentlyBuilding, Planets, ConstructionPlanet)
+                    ShipRoster(You.Ships.ToArray(), You.CurrentlyBuilding, Planets, ConstructionPlanet)
 
                 Case ConsoleKey.R
                     ResearchManagement(Technologies, Researching, Totals.TechIncome)
 
                 Case ConsoleKey.O
                     'orders
-                    OrdersManagement(Planets, Ships.ToArray)
+                    OrdersManagement(Planets, You.Ships.ToArray)
 
                 Case ConsoleKey.D
                     'debug

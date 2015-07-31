@@ -3,41 +3,10 @@
 
     Private MyResearch As Byte
     Public Income As Byte
-    Public Focus As ProductionFocus
-
-    ReadOnly Property ResearchBonus As Decimal
-        Get
-            If Focus = ProductionFocus.Balanced Then
-                Return 1
-            ElseIf Focus = ProductionFocus.Production Then
-                Return 0.5
-            ElseIf Focus = ProductionFocus.Research Then
-                Return 1.5
-            End If
-        End Get
-    End Property
-
-    ReadOnly Property ProductionBonus As Decimal
-        Get
-            If Focus = ProductionFocus.Balanced Then
-                Return 1
-            ElseIf Focus = ProductionFocus.Production Then
-                Return 1.5
-            ElseIf Focus = ProductionFocus.Research Then
-                Return 0.5
-            End If
-        End Get
-    End Property
 
     Public ReadOnly Property Research As Decimal
         Get
             Return MyResearch * ResearchBonus
-        End Get
-    End Property
-
-    Public ReadOnly Property Production As Decimal
-        Get
-            Return 0.8 * Resources * ProductionBonus
         End Get
     End Property
 

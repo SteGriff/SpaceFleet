@@ -27,7 +27,7 @@
             Dim ThisRace As Race = GenerateRace(S)
 
             'Instantiate the basic Enemy data (add it later)
-            Dim ThisEnemy As New Enemy(ThisRace, Randomiser)
+            Dim ThisEnemy As New Enemy(ThisRace, S, Randomiser)
 
             'For later
             Dim SystemsControlled As Integer = Randomiser.Next(1, 4)

@@ -72,7 +72,7 @@
     Public Sub Info()
 
         'Terran Defence Drone   2   100/100/100  100/100/100  999/999
-        Console.WriteLine(InfoTemplate, Me.DesignName, Me.Warp, Me.AttackString, Me.DefenceString, Me.HpString)
+        Console.WriteLine(InfoTemplate, Me.Name, Me.Warp, Me.AttackString, Me.DefenceString, Me.HpString)
 
     End Sub
 
