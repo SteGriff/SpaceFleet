@@ -33,30 +33,23 @@
             Dim SystemsControlled As Integer = Randomiser.Next(1, 4)
             Dim AnyPlanetInSystemClaimed As Boolean = False
 
-            Dim TerritoryBegin As Integer = 0
-            Dim TerritoryEnd As Integer = 0
-
             For Each P As Planet In S.Planets
                 If S.Planets.Count = 1 Then
-                    ClaimPlanet(ThisEnemy, P, TerritoryBegin, TerritoryEnd)
+                    P.Claim(ThisEnemy)
                     Exit For
                 End If
 
                 '1 in 2 chance to claim each planet in system
                 If Randomiser.Next(2) = 0 Then
-                    ClaimPlanet(ThisEnemy, P, TerritoryBegin, TerritoryEnd)
+                    P.Claim(ThisEnemy)
                 End If
 
             Next
 
             'Claim at least one planet if none claimed
             If Not AnyPlanetInSystemClaimed Then
-                ClaimPlanet(ThisEnemy, S.Planets(0), TerritoryBegin, TerritoryEnd)
+                S.Planets(0).Claim(ThisEnemy)
             End If
-
-            'Set the territory
-            ThisEnemy.TerritoryBegin = TerritoryBegin
-            ThisEnemy.TerritoryEnd = TerritoryEnd
 
             'Add the enemy to list
             Enemies.Add(ThisEnemy)
@@ -66,22 +59,6 @@
         Return Enemies
 
     End Function
-
-    Public Sub ClaimPlanet(APlayer As IPlayer, ByRef P As Planet, ByRef TerritoryBegin As Integer, ByRef TerritoryEnd As Integer)
-
-        'Set planet owner
-        P.Owner = APlayer
-
-        'Change race territory and pass out
-        If TerritoryBegin = 0 Then
-            TerritoryBegin = P.Location - APlayer.Influence
-        End If
-
-        If P.Location + APlayer.Influence > TerritoryEnd Then
-            TerritoryEnd = P.Location + APlayer.Influence
-        End If
-
-    End Sub
 
     Private Function GenerateRace(S As Star)
 

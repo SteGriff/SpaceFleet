@@ -12,10 +12,6 @@
     'Territory core
     Dim HomeStar As Star
 
-    'Start and end of influenced territory
-    Public TerritoryBegin As Integer
-    Public TerritoryEnd As Integer
-
     'How many times have you met (called Meet())
     Private MyMeetings As Integer
     Public ReadOnly Property Meetings As Integer
@@ -38,7 +34,6 @@
         Me.Influence = 1
         Me.MyMeetings = 0
 
-
         Dim Attack As Byte() = {1, 0, 0}
         Dim Defence As Byte() = {1, 1, 1}
 
@@ -47,11 +42,6 @@
 
     End Sub
 
-    Public Function HasInTerritory(S As Ship) As Boolean
-
-        Return S.Location >= TerritoryBegin AndAlso S.Location <= TerritoryEnd
-
-    End Function
 
     Public Sub Meet()
         MyMeetings += 1

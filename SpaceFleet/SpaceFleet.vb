@@ -22,13 +22,16 @@ Module SpaceFleet
         Console.Write("Enter race name: ")
         Dim RaceName As String = Console.ReadLine
 
-        Dim HumanRace As New Race(RaceName, "(>_<)", ConsoleColor.White)
-        Dim You As New Human(HumanRace)
+        'Master list of planets
+        Dim Earth As New MyPlanet("Earth", 0, 6, 16, 1, 1, 5, "O", ConsoleColor.Blue)
+        Dim Mars As New MyPlanet("Mars", 1, 1, 8, 1, 2, 1, "o", ConsoleColor.DarkRed)
+        Dim Planets As New List(Of Planet)({Earth, Mars})
 
-        'Initialise friendly planets
-        Dim Planets As New List(Of Planet)
-        Planets.Add(New MyPlanet("Earth", 0, 6, 16, 1, 1, 5, "O", ConsoleColor.Blue))
-        Planets.Add(New MyPlanet("Mars", 1, 1, 8, 1, 2, 1, "o", ConsoleColor.DarkRed))
+        'Init player model
+        Dim PlayersFirstPlanets As New List(Of Planet)({Earth, Mars})
+
+        Dim HumanRace As New Race(RaceName, "(>_<)", ConsoleColor.White)
+        Dim You As New Human(HumanRace, PlayersFirstPlanets)
 
         'Initialise foreign stars and planets
         Dim Stars As New List(Of Star)
@@ -38,8 +41,6 @@ Module SpaceFleet
         'Consolidate all planets in single array
         Planets = Planets.Concat(StrangePlanets).ToList()
 
-        'Which planet do ships come out of (by Planet index)
-        Dim ConstructionPlanet As Planet = Planets(0)
 
         'Generate enemy races
         Dim EnemyGenerator As New EnemyGeneration(Randomiser)
@@ -66,7 +67,9 @@ Module SpaceFleet
                 'Do civilisation growth
                 Dim PopulationGrowth As Decimal = 0
 
-                For Each P As Planet In Planets
+                For Each P As Planet In You.Planets
+                    'This is a belt and brace check... it really should be MyPlanet
+                    ' if it's in You.Planets
                     If TypeOf P Is MyPlanet Then
                         PopulationGrowth += DirectCast(P, MyPlanet).GrowPopulation()
                         DirectCast(P, MyPlanet).GrowIncome()
@@ -76,25 +79,13 @@ Module SpaceFleet
 
                 'Sum the new levels of everything (for reporting)
 
-                Totals = Totalise(Planets)
+                Totals = Totalise(You.Planets)
 
                 'Update production
                 You.ProductionPoints += Totals.ProductionIncome
 
                 Dim ShipJustBuilt As Boolean = False
-                'Production points have satisfied current build job
-                If (You.ProductionPoints >= You.CurrentlyBuilding.Complexity) Then
-
-                    'Get space-location of the planet where it was built
-                    Dim BuildLocation As Integer = ConstructionPlanet.Location
-
-                    'Gain the ship by cloning the design into the ship roster
-                    You.Ships.Add(CType(You.CurrentlyBuilding.BuildClonedInstance(BuildLocation), Ship))
-
-                    'Calculate leftover production pts
-                    You.ProductionPoints -= You.CurrentlyBuilding.Complexity
-                    ShipJustBuilt = True
-                End If
+                You.TryBuildShip()
 
                 'Update technology and get level-up flag
                 Technologies(Researching).ImproveAndCheckAdvancement(Totals.TechIncome, Technologies)
@@ -153,10 +144,10 @@ Module SpaceFleet
             Select Case Selection
 
                 Case ConsoleKey.P
-                    PlanetRoster(Planets)
+                    PlanetRoster(You.Planets)
 
                 Case ConsoleKey.S
-                    ShipRoster(You.Ships.ToArray(), You.CurrentlyBuilding, Planets, ConstructionPlanet)
+                    ShipRoster(You)
 
                 Case ConsoleKey.R
                     ResearchManagement(Technologies, Researching, Totals.TechIncome)
@@ -466,10 +457,10 @@ Module SpaceFleet
         Console.WriteLine("[X] Done")
 
     End Sub
-    Sub ShipRoster(ByVal Ships() As Ship, CurrentlyBuilding As Ship, Planets As List(Of Planet), ByRef ConstructionPlanet As Planet)
+    Sub ShipRoster(You As Human)
 
-        Console.WriteLine("Now building the """ & CurrentlyBuilding.DesignName.ToUpper & """ design")
-        Console.WriteLine("Ships are produced on " & ConstructionPlanet.Name)
+        Console.WriteLine("Now building the """ & You.CurrentlyBuilding.DesignName.ToUpper & """ design")
+        Console.WriteLine("Ships are produced on " & You.ConstructionPlanet.Name)
         Console.WriteLine()
 
         Console.WriteLine("----- FLEET ----- ")
@@ -477,7 +468,7 @@ Module SpaceFleet
         Console.WriteLine()
 
         ShipColumnHeaders()
-        For Each Item As Ship In Ships
+        For Each Item As Ship In You.Ships
             Item.Info()
         Next
 
@@ -491,11 +482,11 @@ Module SpaceFleet
 
             Case ConsoleKey.L
                 'Location
-                SetShipBuildLocation(Planets, ConstructionPlanet)
+                SetShipBuildLocation(You.Planets, You.ConstructionPlanet)
 
             Case ConsoleKey.D
                 'Designs
-                ShipDesigner(CurrentlyBuilding)
+                ShipDesigner(You.CurrentlyBuilding)
 
         End Select
 

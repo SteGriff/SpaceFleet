@@ -81,4 +81,21 @@
         Console.WriteLine(vbTab & "{0} {1}pc", Me.Name, Me.Location)
 
     End Sub
+
+    Public Sub Claim(Claimant As Player)
+
+        'Set planet owner
+        Me.Owner = Claimant
+        Claimant.Planets.Add(Me)
+
+        'Change race territory and pass out
+        If Claimant.TerritoryBegin = 0 Then
+            Claimant.TerritoryBegin = Me.Location - Claimant.Influence
+        End If
+
+        If Me.Location + Claimant.Influence > Claimant.TerritoryEnd Then
+            Claimant.TerritoryEnd = Me.Location + Claimant.Influence
+        End If
+
+    End Sub
 End Class
