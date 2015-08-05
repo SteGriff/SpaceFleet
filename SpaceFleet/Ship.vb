@@ -15,7 +15,7 @@
     Public Engaged As Boolean
     Public Owner As Player
 
-    Public Const InfoTemplate As String = "{0,-22}{1,-6}{2,-12}{3,-12}{4,-8}"
+    Public Const InfoTemplate As String = "{0,-24}{1,-6}{2,-12}{3,-12}{4,-8}"
 
     Public Property Location As Integer Implements IConsoleEntity.Location
         Get
@@ -78,7 +78,7 @@
     End Property
     Public Sub Info()
 
-        'Terran Defence Drone   2   100/100/100  100/100/100  999/999
+        'Terran Drone   2   100/100/100  100/100/100  999/999
         Console.WriteLine(InfoTemplate, Me.Name, Me.Warp, Me.AttackString, Me.DefenceString, Me.HpString)
 
     End Sub

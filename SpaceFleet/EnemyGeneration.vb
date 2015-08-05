@@ -26,30 +26,31 @@
 
             Dim ThisRace As Race = GenerateRace(S)
 
-            'Instantiate the basic Enemy data (add it later)
-            Dim ThisEnemy As New Enemy(ThisRace, S, OtherShips, Randomiser)
-
             'For later
-            Dim SystemsControlled As Integer = Randomiser.Next(1, 4)
+            'Dim SystemsControlled As Integer = Randomiser.Next(1, 4)
             Dim AnyPlanetInSystemClaimed As Boolean = False
+            Dim InitialPlanets As New List(Of Planet)
 
             For Each P As Planet In S.Planets
                 If S.Planets.Count = 1 Then
-                    P.Claim(ThisEnemy)
+                    InitialPlanets.Add(P)
                     Exit For
                 End If
 
                 '1 in 2 chance to claim each planet in system
                 If Randomiser.Next(2) = 0 Then
-                    P.Claim(ThisEnemy)
+                    InitialPlanets.Add(P)
                 End If
 
             Next
 
             'Claim at least one planet if none claimed
             If Not AnyPlanetInSystemClaimed Then
-                S.Planets(0).Claim(ThisEnemy)
+                InitialPlanets.Add(S.Planets(0))
             End If
+
+            'Instantiate the basic Enemy data (add it later)
+            Dim ThisEnemy As New Enemy(ThisRace, S, OtherShips, InitialPlanets, Randomiser)
 
             'Add the enemy to list
             Enemies.Add(ThisEnemy)

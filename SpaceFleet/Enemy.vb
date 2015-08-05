@@ -5,9 +5,6 @@
     Public Ability As Integer
     Public Age As Integer
 
-    'Territory core
-    Dim HomeStar As Star
-
     'How many times have you met (called Meet())
     Private MyMeetings As Integer
     Public ReadOnly Property Meetings As Integer
@@ -16,11 +13,8 @@
         End Get
     End Property
 
-    Public Sub New(R As Race, S As Star, UniversalShips As List(Of Ship), Randomiser As Random)
-        MyBase.New(R, UniversalShips)
-
-        Me.HomeStar = S
-        Me.ConstructionPlanet = S.Planets.First()
+    Public Sub New(R As Race, S As Star, UniversalShips As List(Of Ship), InitialPlanets As List(Of Planet), Randomiser As Random)
+        MyBase.New(R, S, InitialPlanets, UniversalShips)
 
         'Ability (difficulty) 1 to 10; 10 is most able
         Me.Ability = Randomiser.Next(1, 11)

@@ -89,7 +89,7 @@
         Claimant.Planets.Add(Me)
 
         'Change race territory and pass out
-        If Claimant.TerritoryBegin = 0 Then
+        If Me.Location - Claimant.Influence < Claimant.TerritoryBegin Then
             Claimant.TerritoryBegin = Me.Location - Claimant.Influence
         End If
 

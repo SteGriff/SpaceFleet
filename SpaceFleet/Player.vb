@@ -50,13 +50,22 @@
 
     Public Function HasInTerritory(S As Ship) As Boolean
 
-        Return S.Location >= TerritoryBegin AndAlso S.Location <= TerritoryEnd
+        Return TerritoryBegin <= S.Location AndAlso S.Location <= TerritoryEnd
 
     End Function
 
-    Public Sub New(R As Race, UniversalShips As List(Of Ship))
+    Public Sub New(R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of Ship))
 
         Me.Race = R
+
+        TerritoryBegin = HomeStar.Location
+        TerritoryEnd = HomeStar.Location
+
+        For Each P As Planet In InitialPlanets
+            P.Claim(Me)
+        Next
+
+        ConstructionPlanet = Me.Planets(0)
         InitialiseShips(UniversalShips)
 
     End Sub
@@ -66,7 +75,7 @@
         Dim Attack As Byte() = {1, 0, 0}
         Dim Defence As Byte() = {0, 0, 0}
 
-        ShipDesigns.Add(New Ship(Race.Name + " defence drone", 3, 2, Attack, Defence))
+        ShipDesigns.Add(New Ship(Race.Name + " drone", 5, 2, Attack, Defence))
         'ShipDesigns.Add(New Ship(Race.Name + " frigate", 2, 2, Attack, Defence))
 
         CurrentlyBuilding = ShipDesigns(0)

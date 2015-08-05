@@ -33,8 +33,12 @@ Module SpaceFleet
         'Initialise master ship list
         Dim UniversalShips As New List(Of Ship)
 
+        'Home star for initial location
+        Dim Sol As New Star(0, False)
+
+        'Init human player basics
         Dim HumanRace As New Race(RaceName, "(>_<)", ConsoleColor.White)
-        Dim You As New Human(HumanRace, PlayersFirstPlanets, UniversalShips)
+        Dim You As New Human(HumanRace, Sol, PlayersFirstPlanets, UniversalShips)
 
         'Initialise foreign stars and planets
         Dim Stars As New List(Of Star)
@@ -189,7 +193,7 @@ Module SpaceFleet
     End Function
 
     Sub Divider()
-        Console.Write(vbCrLf & "-------" & vbCrLf)
+        Console.Write(vbCrLf & "--------" & vbCrLf)
     End Sub
 
     Function NumberOfTechnologies() As Short
@@ -465,7 +469,7 @@ Module SpaceFleet
         Console.WriteLine("Ships are produced on " & You.ConstructionPlanet.Name)
         Console.WriteLine()
 
-        Console.WriteLine("----- FLEET ----- ")
+        Console.WriteLine("-------- FLEET -------- ")
         'Console.WriteLine("[Laser/Driver/Missiles]")
         Console.WriteLine()
 
@@ -688,9 +692,12 @@ Module SpaceFleet
 
     Private Sub DebugStuff(Enemies As List(Of Enemy))
 
+        Const Template As String = "{0,8} {1,-20} {2,-6} {3,-6} {4,-6}"
+
+        Console.WriteLine(Template, "Face", "Name", "Ablty", "TBgn", "TEnd")
         For Each E As Enemy In Enemies
             Console.ForegroundColor = E.Race.Colour
-            Console.WriteLine("{0,8} {1,-20} {2}", E.Race.Face, E.Race.Name, E.Ability)
+            Console.WriteLine(Template, E.Race.Face, E.Race.Name, E.Ability, E.TerritoryBegin, E.TerritoryEnd)
             Console.ForegroundColor = ConsoleColor.Gray
         Next
 
@@ -703,11 +710,15 @@ Module SpaceFleet
         Dim MNum As Integer = 1
         Dim TotalM As Integer = Messages.Count
 
+        If TotalM = 0 Then
+            Return
+        End If
+
         For Each M As CommsMessage In Messages
 
             Console.Clear()
             Console.WriteLine()
-            Console.WriteLine("--------[ o . . ]---[ COMMS ]----[ . o o ]--------")
+            Console.WriteLine("-------- COMMS --------")
             Console.WriteLine()
             Console.WriteLine("Message {0} of {1}:", MNum, TotalM)
 
@@ -726,6 +737,8 @@ Module SpaceFleet
             Console.WriteLine()
             Console.WriteLine("Press a key...")
             Console.ReadLine()
+            MNum += 1
+
         Next
 
     End Sub
