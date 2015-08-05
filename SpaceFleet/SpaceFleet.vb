@@ -693,11 +693,23 @@ Module SpaceFleet
     Private Sub DebugStuff(Enemies As List(Of Enemy))
 
         Const Template As String = "{0,8} {1,-20} {2,-6} {3,-6} {4,-6}"
+        Dim AllShips As New List(Of Ship)
 
         Console.WriteLine(Template, "Face", "Name", "Ablty", "TBgn", "TEnd")
+
         For Each E As Enemy In Enemies
+
             Console.ForegroundColor = E.Race.Colour
             Console.WriteLine(Template, E.Race.Face, E.Race.Name, E.Ability, E.TerritoryBegin, E.TerritoryEnd)
+            Console.ForegroundColor = ConsoleColor.Gray
+
+            AllShips.AddRange(E.Ships)
+
+        Next
+
+        For Each S As Ship In AllShips.OrderBy(Function(x) (x.Location))
+            Console.ForegroundColor = S.Owner.Race.Colour
+            Console.WriteLine("{0,-6} {1,25}", S.Location, S.Name)
             Console.ForegroundColor = ConsoleColor.Gray
         Next
 
