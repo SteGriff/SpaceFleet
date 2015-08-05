@@ -16,10 +16,11 @@
         End Get
     End Property
 
-    Public Sub New(R As Race, S As Star, Randomiser As Random)
-        MyBase.New(R)
+    Public Sub New(R As Race, S As Star, UniversalShips As List(Of Ship), Randomiser As Random)
+        MyBase.New(R, UniversalShips)
 
         Me.HomeStar = S
+        Me.ConstructionPlanet = S.Planets.First()
 
         'Ability (difficulty) 1 to 10; 10 is most able
         Me.Ability = Randomiser.Next(1, 11)
@@ -30,12 +31,6 @@
         Me.Influence = 1
         Me.MyMeetings = 0
 
-        Dim Attack As Byte() = {1, 0, 0}
-        Dim Defence As Byte() = {1, 1, 1}
-
-        ShipDesigns.Add(New Ship(Race.Name + " defence drone", 2, 2, Attack, Defence))
-        Ships.Add(CType(ShipDesigns(0).BuildClonedInstance(0), Ship))
-
     End Sub
 
 
@@ -43,7 +38,7 @@
         MyMeetings += 1
     End Sub
 
-    Public Sub Turn()
+    Public Sub Turn(OtherShips As List(Of Ship))
 
         Age += 1
 
@@ -60,7 +55,7 @@
         'Build ships
         If Age Mod Math.Floor(100 / Ability) = 0 Then
             'Shortcut... build from home star for now
-            Dim NewShip = ShipDesigns(0).BuildClonedInstance(HomeStar.Location)
+            Dim NewShip = ShipDesigns(0).BuildClonedInstance(Me)
 
             'Target the player's end of the lineiverse
             NewShip.Destination = 0
@@ -70,7 +65,7 @@
 
         'Move all ships
         For Each S As Ship In Ships
-            S.Move()
+            S.Move(OtherShips)
 
         Next
 

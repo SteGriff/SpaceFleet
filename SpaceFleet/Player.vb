@@ -54,26 +54,28 @@
 
     End Function
 
-    Public Sub New(R As Race)
+    Public Sub New(R As Race, UniversalShips As List(Of Ship))
 
         Me.Race = R
-        InitialiseShips()
+        InitialiseShips(UniversalShips)
 
     End Sub
 
-    Public Sub InitialiseShips()
+    Public Sub InitialiseShips(UniversalShips As List(Of Ship))
 
         Dim Attack As Byte() = {1, 0, 0}
-        Dim Defence As Byte() = {1, 1, 1}
+        Dim Defence As Byte() = {0, 0, 0}
 
-        ShipDesigns.Add(New Ship(Race.Name + " defence drone", 2, 2, Attack, Defence))
-        ShipDesigns.Add(New Ship(Race.Name + " frigate", 2, 2, Attack, Defence))
+        ShipDesigns.Add(New Ship(Race.Name + " defence drone", 3, 2, Attack, Defence))
+        'ShipDesigns.Add(New Ship(Race.Name + " frigate", 2, 2, Attack, Defence))
 
         CurrentlyBuilding = ShipDesigns(0)
         ProductionPoints = 0
 
-        Ships.Add(CType(ShipDesigns(0).BuildClonedInstance(0), Ship))
-        Ships.Add(CType(ShipDesigns(1).BuildClonedInstance(100), Ship))
+        Dim FirstShip = CType(ShipDesigns(0).BuildClonedInstance(Me), Ship)
+
+        Ships.Add(FirstShip)
+        UniversalShips.Add(FirstShip)
 
     End Sub
 
@@ -83,7 +85,7 @@
         If (ProductionPoints >= CurrentlyBuilding.Complexity) Then
 
             'Gain the ship by cloning the design into the ship roster
-            Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(ConstructionPlanet.Location), Ship))
+            Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(Me), Ship))
 
             'Calculate leftover production pts
             ProductionPoints -= CurrentlyBuilding.Complexity

@@ -30,8 +30,11 @@ Module SpaceFleet
         'Init player model
         Dim PlayersFirstPlanets As New List(Of Planet)({Earth, Mars})
 
+        'Initialise master ship list
+        Dim UniversalShips As New List(Of Ship)
+
         Dim HumanRace As New Race(RaceName, "(>_<)", ConsoleColor.White)
-        Dim You As New Human(HumanRace, PlayersFirstPlanets)
+        Dim You As New Human(HumanRace, PlayersFirstPlanets, UniversalShips)
 
         'Initialise foreign stars and planets
         Dim Stars As New List(Of Star)
@@ -43,7 +46,7 @@ Module SpaceFleet
 
         'Generate enemy races
         Dim EnemyGenerator As New EnemyGeneration(Randomiser)
-        Dim Enemies = EnemyGenerator.GenerateEnemies(Stars)
+        Dim Enemies = EnemyGenerator.GenerateEnemies(Stars, UniversalShips)
 
         'Create all techs and set to Lv1.
         InitialiseTechnologies(You.Technologies)
@@ -88,7 +91,7 @@ Module SpaceFleet
 
                 'Move all moving ships
                 For Each S As Ship In You.Ships
-                    S.Move()
+                    S.Move(UniversalShips)
 
                     'Forgive us our O(n^2) as we forgive those...
                     For Each E As Enemy In Enemies
@@ -105,6 +108,14 @@ Module SpaceFleet
                         End If
 
                     Next
+
+                    'Handle battles
+                    If S.Engaged Then
+                        'All ships with engaged flag on this spot in space
+                        Dim Combatants = UniversalShips.Where(Function(sh) (sh.Location = S.Location AndAlso sh.Engaged))
+
+                    End If
+
                 Next
 
                 'Done with weekly jobs
@@ -116,7 +127,7 @@ Module SpaceFleet
                     CommsReport(Messages)
 
                     'Give weekly report if this is not the first turn
-                    WeeklyReport(Week, You.Technologies(You.Researching), PopulationGrowth, Totals, ShipJustBuilt, You.CurrentlyBuilding, You.ProductionPoints)
+                    WeeklyReport(Week, You, PopulationGrowth, Totals, ShipJustBuilt)
 
                 End If
 
@@ -615,7 +626,9 @@ Module SpaceFleet
         Console.ReadLine()
     End Sub
 
-    Private Sub WeeklyReport(Week As Integer, Technology As Technology, PopulationChange As Decimal, Totals As SystemTotals, ShipJustBuilt As Boolean, CurrentlyBuilding As Ship, ProductionPoints As Decimal)
+    Private Sub WeeklyReport(Week As Integer, You As Player, PopulationChange As Decimal, Totals As SystemTotals, ShipJustBuilt As Boolean)
+
+        Dim Technology = You.Technologies(You.Researching)
 
         Console.WriteLine("Governer's report for week {0}", Week)
 
@@ -629,10 +642,10 @@ Module SpaceFleet
         End If
 
         Console.WriteLine()
-        Console.WriteLine("Our production was {0} pts for a new total of {1}", Totals.ProductionIncome, ProductionPoints)
+        Console.WriteLine("Our production was {0} pts for a new total of {1}", Totals.ProductionIncome, You.ProductionPoints)
 
         If ShipJustBuilt Then
-            Console.WriteLine("As we completed construction of '{0}'!", CurrentlyBuilding.Name)
+            Console.WriteLine("As we completed construction of '{0}'!", You.CurrentlyBuilding.Name)
         End If
 
         PressReturn()

@@ -98,6 +98,7 @@
     <Compile Include="Race.vb" />
     <Compile Include="EnemyGeneration.vb" />
     <Compile Include="Ship.vb" />
+    <Compile Include="SpaceBattle.vb" />
     <Compile Include="SpaceFleet.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">

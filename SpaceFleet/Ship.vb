@@ -12,7 +12,8 @@
     Public Attack As Byte()
     Public Defence As Byte()
 
-    Public Shared NullShip As New Ship()
+    Public Engaged As Boolean
+    Public Owner As Player
 
     Public Const InfoTemplate As String = "{0,-22}{1,-6}{2,-12}{3,-12}{4,-8}"
 
@@ -32,6 +33,12 @@
         Set(value As String)
             MyName = value
         End Set
+    End Property
+
+    Public ReadOnly Property PercentHP As Decimal
+        Get
+            Return (HP / MaxHP) * 100
+        End Get
     End Property
 
     Sub New()
@@ -88,9 +95,17 @@
         Return HP & "/" & MaxHP
     End Function
 
-    Public Function PercentBuilt(ProductionPoints As Decimal) As String
-        Return Math.Round((ProductionPoints / Complexity) * 100, 1) & "%"
-    End Function
+    Public ReadOnly Property PercentBuilt(ProductionPoints As Decimal) As String
+        Get
+            Return Math.Round((ProductionPoints / Complexity) * 100, 1) & "%"
+        End Get
+    End Property
+
+    Public ReadOnly Property Dead() As Boolean
+        Get
+            Return HP <= 0
+        End Get
+    End Property
 
     Function Clone() As Object Implements ICloneable.Clone
 
@@ -98,10 +113,11 @@
 
     End Function
 
-    Function BuildClonedInstance(Location As Integer) As Ship
+    Function BuildClonedInstance(Owner As Player) As Ship
 
         Dim NewShip As Ship = Me.Clone()
-        NewShip.Location = Location
+        NewShip.Owner = Owner
+        NewShip.Location = Owner.ConstructionPlanet.Location
         Return NewShip
 
     End Function
@@ -141,7 +157,9 @@
         Return Location <> Destination
     End Function
 
-    Public Sub Move()
+    Public Sub Move(OtherShips As List(Of Ship))
+
+        Dim OldLocation As Integer = Location
 
         If Location < Destination Then
             Dim NewLocation As Integer = Location + Warp
@@ -164,6 +182,58 @@
 
             Location = NewLocation
 
+        End If
+
+        'Check if we passed another ship
+        For Each S As Ship In OtherShips
+            If S.IsBetween(OldLocation, Location) Then
+                Me.Location = S.Location
+                Me.Engaged = True
+                S.Engaged = True
+            End If
+        Next
+
+    End Sub
+
+    Public Function IsBetween(A As Integer, B As Integer)
+
+        If A > B Then
+            Return A > Me.Location AndAlso Me.Location > B
+        ElseIf A < B Then
+            Return A < Me.Location AndAlso Me.Location < B
+        Else
+            'A == B
+            Return A = Me.Location
+        End If
+
+    End Function
+
+    Public Sub FireOn(Target As Ship)
+
+        Console.WriteLine("{0} firing on {1}...", Me.Name, Target.Name)
+
+        Dim Damages(3) As Integer
+        Dim BestDamage As Integer = 0
+        Dim BestWeapon As WeaponType = WeaponType.Laser
+
+        For W As Integer = 0 To 2
+            Dim ThisDamage As Integer = Me.Attack(W) - Target.Defence(W)
+            Damages(W) = ThisDamage
+
+            Console.WriteLine("  {0} would do {1} damage", CType(W, WeaponType).ToString(), ThisDamage)
+
+            If ThisDamage > BestDamage Then
+                BestDamage = ThisDamage
+                BestWeapon = CType(W, WeaponType)
+                Console.WriteLine("  {0} is best weapon", BestWeapon.ToString())
+            End If
+        Next
+
+        Target.HP -= BestDamage
+        Console.WriteLine("{0} hit {1} with {2} for {3} points of damage", Me.Name, Target.Name, BestWeapon.ToString(), BestDamage)
+
+        If (Target.HP <= 0) Then
+            Console.WriteLine("{0} was destroyed!!", Target.Name)
         End If
 
     End Sub

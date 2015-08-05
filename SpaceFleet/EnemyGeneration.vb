@@ -6,7 +6,7 @@
         Me.Randomiser = Randomiser
     End Sub
 
-    Public Function GenerateEnemies(Stars As List(Of Star)) As List(Of Enemy)
+    Public Function GenerateEnemies(Stars As List(Of Star), OtherShips As List(Of Ship)) As List(Of Enemy)
 
         'TODO Allow races to spread across more than one star system initially
 
@@ -27,7 +27,7 @@
             Dim ThisRace As Race = GenerateRace(S)
 
             'Instantiate the basic Enemy data (add it later)
-            Dim ThisEnemy As New Enemy(ThisRace, S, Randomiser)
+            Dim ThisEnemy As New Enemy(ThisRace, S, OtherShips, Randomiser)
 
             'For later
             Dim SystemsControlled As Integer = Randomiser.Next(1, 4)
