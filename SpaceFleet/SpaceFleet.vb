@@ -31,14 +31,14 @@ Module SpaceFleet
         Dim PlayersFirstPlanets As New List(Of Planet)({Earth, Mars})
 
         'Initialise master ship list
-        Dim UniversalShips As New List(Of Ship)
+        Dim AllShips As New List(Of Ship)
 
         'Home star for initial location
         Dim Sol As New Star(0, False)
 
         'Init human player basics
         Dim HumanRace As New Race(RaceName, "(>_<)", ConsoleColor.White)
-        Dim You As New Human(HumanRace, Sol, PlayersFirstPlanets, UniversalShips)
+        Dim You As New Human(HumanRace, Sol, PlayersFirstPlanets, AllShips)
 
         'Initialise foreign stars and planets
         Dim Stars As New List(Of Star)
@@ -50,7 +50,7 @@ Module SpaceFleet
 
         'Generate enemy races
         Dim EnemyGenerator As New EnemyGeneration(Randomiser)
-        Dim Enemies = EnemyGenerator.GenerateEnemies(Stars, UniversalShips)
+        Dim Enemies = EnemyGenerator.GenerateEnemies(Stars, AllShips)
 
         'Create all techs and set to Lv1.
         InitialiseTechnologies(You.Technologies)
@@ -87,40 +87,13 @@ Module SpaceFleet
                 'Update production
                 You.ProductionPoints += Totals.ProductionIncome
 
-                Dim ShipJustBuilt As Boolean = You.TryBuildShip()
+                Dim ShipJustBuilt As Boolean = You.TryBuildShip(AllShips)
 
                 'Update technology and get level-up flag
                 You.Technologies(You.Researching).ImproveAndCheckAdvancement(Totals.TechIncome, You.Technologies)
                 You.Money = CInt(You.Money + (Totals.CashIncome * TaxRate))
 
-                'Move all moving ships
-                For Each S As Ship In You.Ships
-                    S.Move(UniversalShips)
-
-                    'Forgive us our O(n^2) as we forgive those...
-                    For Each E As Enemy In Enemies
-
-                        If E.HasInTerritory(S) Then
-
-                            E.Meet()
-
-                            'Check if first contact
-                            If E.Meetings = 1 Then
-                                Messages.Add(New CommsMessage(E.Race, CommsMessage.CommsKind.Introduction))
-                            End If
-
-                        End If
-
-                    Next
-
-                    'Handle battles
-                    If S.Engaged Then
-                        'All ships with engaged flag on this spot in space
-                        Dim Combatants = UniversalShips.Where(Function(sh) (sh.Location = S.Location AndAlso sh.Engaged))
-
-                    End If
-
-                Next
+                MoveAllShips(AllShips, Enemies, Messages)
 
                 'Done with weekly jobs
                 'Display to player
@@ -165,7 +138,7 @@ Module SpaceFleet
 
                 Case ConsoleKey.O
                     'orders
-                    OrdersManagement(Planets, You.Ships, UniversalShips)
+                    OrdersManagement(Planets, You.Ships, AllShips)
 
                 Case ConsoleKey.D
                     'debug
@@ -243,7 +216,7 @@ Module SpaceFleet
         Next
 
         'Add all visible ships to Entities
-        For Each S As Ship In AllShips
+        For Each S As Ship In AllShips.OrderBy(Function(x) (x.Location))
 
             If S.Location > FurthestExploredReach Then
                 Exit For
@@ -773,6 +746,46 @@ Module SpaceFleet
         Next
 
         Console.WriteLine("-----------------------")
+
+    End Sub
+
+    Private Sub MoveAllShips(AllShips As List(Of Ship), Enemies As List(Of Enemy), Messages As List(Of CommsMessage))
+
+        'Move all moving ships
+        For Each S As Ship In AllShips
+
+            S.Move(AllShips)
+
+            If TypeOf S.Owner Is Human Then
+                'Forgive us our O(n^2) as we forgive those...
+                For Each E As Enemy In Enemies
+
+                    If E.HasInTerritory(S) Then
+
+                        E.Meet()
+
+                        'Check if first contact
+                        If E.Meetings = 1 Then
+                            Messages.Add(New CommsMessage(E.Race, CommsMessage.CommsKind.Introduction))
+                        End If
+
+                    End If
+
+                Next
+            End If
+
+            'Handle battles
+            If S.Engaged Then
+
+                'All ships with engaged flag on this spot
+                Dim Combatants = AllShips.Where(Function(sh) (sh.Location = S.Location AndAlso sh.Engaged)).ToList()
+
+                Dim Battle As New SpaceBattle(Combatants)
+                Battle.Fight()
+
+            End If
+
+        Next
 
     End Sub
 

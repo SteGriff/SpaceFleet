@@ -81,20 +81,19 @@
         CurrentlyBuilding = ShipDesigns(0)
         ProductionPoints = 0
 
-        Dim FirstShip = CType(ShipDesigns(0).BuildClonedInstance(Me), Ship)
+        Dim FirstShip = CType(ShipDesigns(0).BuildClonedInstance(Me, UniversalShips), Ship)
 
         Ships.Add(FirstShip)
-        UniversalShips.Add(FirstShip)
 
     End Sub
 
-    Public Function TryBuildShip() As Boolean
+    Public Function TryBuildShip(UniversalShips As List(Of Ship)) As Boolean
 
         'Production points have satisfied current build job
         If (ProductionPoints >= CurrentlyBuilding.Complexity) Then
 
             'Gain the ship by cloning the design into the ship roster
-            Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(Me), Ship))
+            Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(Me, UniversalShips), Ship))
 
             'Calculate leftover production pts
             ProductionPoints -= CurrentlyBuilding.Complexity

@@ -27,7 +27,6 @@
 
     End Sub
 
-
     Public Sub Meet()
         MyMeetings += 1
     End Sub
@@ -49,19 +48,13 @@
         'Build ships
         If Age Mod Math.Floor(100 / Ability) = 0 Then
             'Shortcut... build from home star for now
-            Dim NewShip = ShipDesigns(0).BuildClonedInstance(Me)
+            Dim NewShip = ShipDesigns(0).BuildClonedInstance(Me, OtherShips)
 
             'Target the player's end of the lineiverse
             NewShip.Destination = 0
 
             Ships.Add(NewShip)
         End If
-
-        'Move all ships
-        For Each S As Ship In Ships
-            S.Move(OtherShips)
-
-        Next
 
     End Sub
 

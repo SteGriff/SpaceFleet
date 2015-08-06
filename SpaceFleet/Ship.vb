@@ -113,11 +113,14 @@
 
     End Function
 
-    Function BuildClonedInstance(Owner As Player) As Ship
+    Function BuildClonedInstance(Owner As Player, AllShips As List(Of Ship)) As Ship
 
         Dim NewShip As Ship = Me.Clone()
         NewShip.Owner = Owner
         NewShip.Location = Owner.ConstructionPlanet.Location
+
+        AllShips.Add(NewShip)
+
         Return NewShip
 
     End Function
@@ -176,7 +179,7 @@
         Return Location <> Destination
     End Function
 
-    Public Sub Move(OtherShips As List(Of Ship))
+    Public Sub Move(AllShips As List(Of Ship))
 
         Dim OldLocation As Integer = Location
 
@@ -204,12 +207,19 @@
         End If
 
         'Check if we passed another ship
-        For Each S As Ship In OtherShips
-            If S.IsBetween(OldLocation, Location) Then
+        For Each S As Ship In AllShips
+
+            If S.Equals(Me) Then
+                Continue For
+            End If
+
+            If S.IsBetween(OldLocation, Location) AndAlso S.IsEnemy(Me) Then
+                'Stop at that location and engage in battle
                 Me.Location = S.Location
                 Me.Engaged = True
                 S.Engaged = True
             End If
+
         Next
 
     End Sub
@@ -224,6 +234,12 @@
             'A == B
             Return A = Me.Location
         End If
+
+    End Function
+
+    Public Function IsEnemy(S As Ship) As Boolean
+
+        Return S.GetType().Name <> Me.GetType().Name
 
     End Function
 
