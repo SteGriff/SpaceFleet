@@ -10,7 +10,7 @@
     Public Sub New(Index As Integer, PlanetsHaveGreekLetters As Boolean)
 
         Me.Index = Index
-        Me.Location = Index * 10 * (Rnd(15) + 5)
+        Me.Location = Index * (10 + Rnd(10)) * (1 + Rnd(2))
         Me.PlanetsHaveGreekLetters = PlanetsHaveGreekLetters
         Me.Planets = New List(Of Planet)
         Me.PotentialRaceNames = New List(Of String)

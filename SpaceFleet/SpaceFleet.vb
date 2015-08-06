@@ -128,7 +128,12 @@ Module SpaceFleet
 
                 If Week > 0 Then
 
-                    CommsReport(Messages)
+                    If (Messages.Count > 0) Then
+                        CommsReport(Messages)
+
+                        'Refresh screen
+                        Readout(Week, You, Totals)
+                    End If
 
                     'Give weekly report if this is not the first turn
                     WeeklyReport(Week, You, PopulationGrowth, Totals, ShipJustBuilt)
@@ -160,7 +165,7 @@ Module SpaceFleet
 
                 Case ConsoleKey.O
                     'orders
-                    OrdersManagement(Planets, You.Ships.ToArray)
+                    OrdersManagement(Planets, You.Ships, UniversalShips)
 
                 Case ConsoleKey.D
                     'debug
@@ -213,13 +218,13 @@ Module SpaceFleet
         Return kvp.Key
     End Function
 
-    Private Function DrawMap(Planets As List(Of Planet), Ships() As Ship) As Dictionary(Of Integer, IConsoleEntity)
+    Private Function DrawMap(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of Ship)) As Dictionary(Of Integer, IConsoleEntity)
 
         'TODO Future feature - Sensors technology affect range
         'Dim SensorRange As Integer = Technologies(TechnologyType.Sensors) * 10
-        Dim SensorRange As Integer = 100
+        Dim SensorRange As Integer = 60
 
-        Dim FurthestExploredReach As Integer = Ships.Max(Function(s) (s.Location)) + SensorRange
+        Dim FurthestExploredReach As Integer = YourShips.Max(Function(s) (s.Location)) + SensorRange
         Dim Entities As New Map()
         Dim EntityMapping As New Dictionary(Of Integer, IConsoleEntity)
 
@@ -227,6 +232,7 @@ Module SpaceFleet
         Console.WriteLine("Furthest Explored Reach: {0}pc", FurthestExploredReach)
         Console.WriteLine()
 
+        'Add all visible planets to Entities
         For Each P As Planet In Planets
 
             If P.Location > FurthestExploredReach Then
@@ -236,10 +242,17 @@ Module SpaceFleet
             Entities.Add(P.Location, P)
         Next
 
-        For Each S As Ship In Ships
+        'Add all visible ships to Entities
+        For Each S As Ship In AllShips
+
+            If S.Location > FurthestExploredReach Then
+                Exit For
+            End If
+
             Entities.Add(S.Location, S)
         Next
 
+        'Sort entities by Location (key) and output them
         Dim EntityNumber As Integer = 0
 
         For Each E In Entities.OrderedByKey
@@ -258,9 +271,9 @@ Module SpaceFleet
 
 #Region "Orders"
 
-    Private Sub OrdersManagement(Planets As List(Of Planet), Ships() As Ship)
+    Private Sub OrdersManagement(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of Ship))
 
-        Dim EntityMapping = DrawMap(Planets, Ships)
+        Dim EntityMapping = DrawMap(Planets, YourShips, AllShips)
 
         Console.WriteLine()
         Console.WriteLine("Select a ship to move")
@@ -299,7 +312,7 @@ Module SpaceFleet
             End If
 
             Do Until EntityMapping.ContainsKey(Selection.Number)
-                Selection = GetNumber("No such thing. Enter a number from square brackets above: ")
+                Selection = GetNumber("No such thing. Enter a [number] from above: ")
             Loop
 
             Return EntityMapping(Selection.Number)
@@ -315,14 +328,19 @@ Module SpaceFleet
 
         If EntityMapping.Count > 0 Then
 
-            Dim ShipSelection = GetNumber("Enter [ship number] or 'x' to cancel: ")
+            Dim ShipSelection = GetNumber("Enter [ship number] (enter blank to cancel): ")
 
             If ShipSelection.Cancelled Then
                 Return Nothing
             End If
 
-            Do Until EntityMapping.ContainsKey(ShipSelection.Number) AndAlso TypeOf EntityMapping(ShipSelection.Number) Is Ship
-                ShipSelection = GetNumber("No such ship. Enter a [ship number] from above or'x': ")
+            Do Until EntityMapping.ContainsKey(ShipSelection.Number) _
+                AndAlso TypeOf EntityMapping(ShipSelection.Number) Is Ship
+                ShipSelection = GetNumber("No such ship. Enter a [ship number] from above: ")
+            Loop
+
+            Do Until TypeOf CType(EntityMapping(ShipSelection.Number), Ship).Owner Is Human
+                ShipSelection = GetNumber("That ship isn't yours; try again: ")
             Loop
 
             Return CType(EntityMapping(ShipSelection.Number), Ship)
@@ -675,7 +693,7 @@ Module SpaceFleet
 
             Else
 
-                If InputString.ToLower() = "x" Then
+                If InputString = String.Empty Then
                     InputModel.Cancel()
                 Else
                     Console.Write("Invalid number, try again: ")
@@ -726,12 +744,12 @@ Module SpaceFleet
             Return
         End If
 
+        Console.WriteLine()
+        Console.WriteLine("-------- COMMS --------")
+        Console.WriteLine()
+
         For Each M As CommsMessage In Messages
 
-            Console.Clear()
-            Console.WriteLine()
-            Console.WriteLine("-------- COMMS --------")
-            Console.WriteLine()
             Console.WriteLine("Message {0} of {1}:", MNum, TotalM)
 
             Console.WriteLine()
@@ -749,9 +767,12 @@ Module SpaceFleet
             Console.WriteLine()
             Console.WriteLine("Press a key...")
             Console.ReadLine()
+
             MNum += 1
 
         Next
+
+        Console.WriteLine("-----------------------")
 
     End Sub
 

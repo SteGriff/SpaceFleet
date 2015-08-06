@@ -132,11 +132,30 @@
             LocationString = String.Format("{0}pc", Me.Location)
         End If
 
-        Console.BackgroundColor = ConsoleColor.White
-        Console.ForegroundColor = ConsoleColor.Black
-        Console.WriteLine("{0}{1}{2} {3}pc", Me.Art(), vbTab, Me.Name, Me.Location)
+        If TypeOf Me.Owner Is Human Then
+            Console.BackgroundColor = ConsoleColor.White
+            Console.ForegroundColor = ConsoleColor.Black
+        Else
+            Console.BackgroundColor = ConsoleColor.White
+            Console.ForegroundColor = Me.Owner.Race.Colour
+        End If
+
+        Console.Write("{0}{1}{2}", Me.Art(), vbTab, Me.Name)
+
+        'Reset console defaults
         Console.BackgroundColor = ConsoleColor.Black
         Console.ForegroundColor = ConsoleColor.Gray
+
+        Console.Write(" {0}pc", Me.Location)
+
+        'Write destination if the ship has belongs to the player
+        If Me.Destination <> Me.Location _
+            AndAlso TypeOf Me.Owner Is Human Then
+            Console.Write(" -> {0}pc", Me.Destination)
+        End If
+
+        'End the line
+        Console.WriteLine()
 
     End Sub
 
