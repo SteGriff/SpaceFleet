@@ -16,4 +16,10 @@
 
     End Function
 
+    Public Sub ResetConsole()
+        Console.ForegroundColor = ConsoleColor.Gray
+        Console.BackgroundColor = ConsoleColor.Black
+    End Sub
+
+
 End Module

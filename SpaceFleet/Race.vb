@@ -27,7 +27,7 @@
 
         Console.ForegroundColor = Colour
         Console.Write(Face)
-        Console.ForegroundColor = ConsoleColor.Gray
+        ResetConsole()
 
     End Sub
 

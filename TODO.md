@@ -4,8 +4,6 @@ Notes on little touches to implement, and ideas for how to do some of the big fe
 
 ## Bugs
 
-Ships passed right through each other instead of battling
-
 ## Planet capture
 
 When a ship stops moving and its target is a non-friendly planet, begin planet capture

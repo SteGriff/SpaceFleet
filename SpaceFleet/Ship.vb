@@ -125,6 +125,21 @@
 
     End Function
 
+    Public Sub WriteName() Implements IConsoleEntity.WriteName
+
+        If TypeOf Me.Owner Is Human Then
+            ResetConsole()
+        Else
+            Console.ForegroundColor = Me.Owner.Race.Colour
+        End If
+
+        Console.Write(Me.Name)
+
+        'Reset console defaults
+        ResetConsole()
+
+    End Sub
+
     Public Sub Draw() Implements IConsoleEntity.Draw
 
         Dim LocationString As String = ""
@@ -146,8 +161,7 @@
         Console.Write("{0}{1}{2}", Me.Art(), vbTab, Me.Name)
 
         'Reset console defaults
-        Console.BackgroundColor = ConsoleColor.Black
-        Console.ForegroundColor = ConsoleColor.Gray
+        ResetConsole()
 
         Console.Write(" {0}pc", Me.Location)
 
@@ -181,6 +195,11 @@
 
     Public Sub Move(AllShips As List(Of Ship))
 
+        'Can't move if in battle
+        If Engaged OrElse Location = Destination Then
+            Return
+        End If
+
         Dim OldLocation As Integer = Location
 
         If Location < Destination Then
@@ -206,6 +225,8 @@
 
         End If
 
+        Debug.WriteLineIf(Location < 50, String.Format("{0} moved from {1} to {2}pc", Me.Name, OldLocation, Location))
+
         'Check if we passed another ship
         For Each S As Ship In AllShips
 
@@ -218,6 +239,7 @@
                 Me.Location = S.Location
                 Me.Engaged = True
                 S.Engaged = True
+                Exit For
             End If
 
         Next
@@ -227,9 +249,9 @@
     Public Function IsBetween(A As Integer, B As Integer)
 
         If A > B Then
-            Return A > Me.Location AndAlso Me.Location > B
+            Return A >= Me.Location AndAlso Me.Location >= B
         ElseIf A < B Then
-            Return A < Me.Location AndAlso Me.Location < B
+            Return A <= Me.Location AndAlso Me.Location <= B
         Else
             'A == B
             Return A = Me.Location
@@ -239,7 +261,7 @@
 
     Public Function IsEnemy(S As Ship) As Boolean
 
-        Return S.GetType().Name <> Me.GetType().Name
+        Return S.Owner.GetType().Name <> Me.Owner.GetType().Name
 
     End Function
 
@@ -255,19 +277,20 @@
             Dim ThisDamage As Integer = Me.Attack(W) - Target.Defence(W)
             Damages(W) = ThisDamage
 
-            Console.WriteLine("  {0} would do {1} damage", CType(W, WeaponType).ToString(), ThisDamage)
+            'Console.WriteLine("  {0} would do {1} damage", CType(W, WeaponType).ToString(), ThisDamage)
 
             If ThisDamage > BestDamage Then
                 BestDamage = ThisDamage
                 BestWeapon = CType(W, WeaponType)
-                Console.WriteLine("  {0} is best weapon", BestWeapon.ToString())
+                'Console.WriteLine("  {0} is best weapon", BestWeapon.ToString())
             End If
         Next
 
         Target.HP -= BestDamage
-        Console.WriteLine("{0} hit {1} with {2} for {3} points of damage", Me.Name, Target.Name, BestWeapon.ToString(), BestDamage)
+        Console.WriteLine("{0}...hit it with {1} for {2} points of damage", vbTab, BestWeapon.ToString(), BestDamage)
 
         If (Target.HP <= 0) Then
+
             Console.WriteLine("{0} was destroyed!!", Target.Name)
         End If
 

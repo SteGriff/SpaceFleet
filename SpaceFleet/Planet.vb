@@ -77,8 +77,16 @@
 
         Console.ForegroundColor = Me.Colour
         Console.Write(Me.Art)
-        Console.ForegroundColor = ConsoleColor.Gray
+        ResetConsole()
         Console.WriteLine(vbTab & "{0} {1}pc", Me.Name, Me.Location)
+
+    End Sub
+
+    Public Sub WriteName() Implements IConsoleEntity.WriteName
+
+        Console.ForegroundColor = Me.Colour
+        Console.Write(Me.Name)
+        ResetConsole()
 
     End Sub
 

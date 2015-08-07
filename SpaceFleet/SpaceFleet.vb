@@ -94,6 +94,7 @@ Module SpaceFleet
                 You.Money = CInt(You.Money + (Totals.CashIncome * TaxRate))
 
                 MoveAllShips(AllShips, Enemies, Messages)
+                Debug.WriteLine("")
 
                 'Done with weekly jobs
                 'Display to player
@@ -103,6 +104,7 @@ Module SpaceFleet
 
                     If (Messages.Count > 0) Then
                         CommsReport(Messages)
+                        Messages.Clear()
 
                         'Refresh screen
                         Readout(Week, You, Totals)
@@ -171,7 +173,8 @@ Module SpaceFleet
     End Function
 
     Sub Divider()
-        Console.Write(vbCrLf & "--------" & vbCrLf)
+        Console.WriteLine()
+        Console.WriteLine("--------")
     End Sub
 
     Function NumberOfTechnologies() As Short
@@ -253,7 +256,6 @@ Module SpaceFleet
         Dim SelectedShip = SelectShipOnMap(EntityMapping)
 
         If SelectedShip Is Nothing Then
-            Feedback("no changes made")
             Return
         End If
 
@@ -262,12 +264,14 @@ Module SpaceFleet
         Dim SelectedEntity As IConsoleEntity = SelectAnythingOnMap(EntityMapping)
 
         If SelectedEntity.Name = "" Then
-            Feedback("no changes made")
             Return
         End If
 
         SelectedShip.Destination = SelectedEntity.Location
         Feedback(String.Format("sending {0} en route to {1}pc", SelectedShip.Name, SelectedEntity.Location))
+
+        Console.WriteLine("Press 'a' for another or 'x' if finished")
+        'TODO get input here
 
     End Sub
 
@@ -423,14 +427,14 @@ Module SpaceFleet
 
         If EntityMapping.Count > 0 Then
 
-            Dim Selection = GetNumber("Enter [number] or 'x' to cancel: ")
+            Dim Selection = GetNumber("Enter [number] or press return cancel: ")
 
             If Selection.Cancelled Then
                 Return Nothing
             End If
 
             Do Until EntityMapping.ContainsKey(Selection.Number) AndAlso TypeOf EntityMapping(Selection.Number) Is Planet
-                Selection = GetNumber("No such planet. Enter a [number] from above or'x': ")
+                Selection = GetNumber("No such planet. Enter a [number] from above or press return: ")
             Loop
 
             Return CType(EntityMapping(Selection.Number), Planet)
@@ -692,7 +696,7 @@ Module SpaceFleet
 
             Console.ForegroundColor = E.Race.Colour
             Console.WriteLine(Template, E.Race.Face, E.Race.Name, E.Ability, E.TerritoryBegin, E.TerritoryEnd)
-            Console.ForegroundColor = ConsoleColor.Gray
+            ResetConsole()
 
             AllShips.AddRange(E.Ships)
 
@@ -701,7 +705,7 @@ Module SpaceFleet
         For Each S As Ship In AllShips.OrderBy(Function(x) (x.Location))
             Console.ForegroundColor = S.Owner.Race.Colour
             Console.WriteLine("{0,-6} {1,25}", S.Location, S.Name)
-            Console.ForegroundColor = ConsoleColor.Gray
+            ResetConsole()
         Next
 
         Console.ReadLine()
@@ -780,8 +784,8 @@ Module SpaceFleet
                 'All ships with engaged flag on this spot
                 Dim Combatants = AllShips.Where(Function(sh) (sh.Location = S.Location AndAlso sh.Engaged)).ToList()
 
-                Dim Battle As New SpaceBattle(Combatants)
-                Battle.Fight()
+                Dim Battle As New SpaceBattle()
+                Battle.Fight(Combatants)
 
             End If
 
