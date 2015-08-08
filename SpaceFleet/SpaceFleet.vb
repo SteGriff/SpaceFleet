@@ -199,14 +199,18 @@ Module SpaceFleet
         'TODO Future feature - Sensors technology affect range
         'Dim SensorRange As Integer = Technologies(TechnologyType.Sensors) * 10
         Dim SensorRange As Integer = 60
-
         Dim FurthestExploredReach As Integer = YourShips.Max(Function(s) (s.Location)) + SensorRange
-        Dim Entities As New Map()
-        Dim EntityMapping As New Dictionary(Of Integer, IConsoleEntity)
 
+        Console.Clear()
+        Console.WriteLine()
+        Console.WriteLine("-------- ORDERS --------")
+        Console.WriteLine()
         Console.WriteLine("Sensor range: {0} parsecs (pc)", SensorRange)
         Console.WriteLine("Furthest Explored Reach: {0}pc", FurthestExploredReach)
         Console.WriteLine()
+
+        Dim Entities As New Map()
+        Dim EntityMapping As New Dictionary(Of Integer, IConsoleEntity)
 
         'Add all visible planets to Entities
         For Each P As Planet In Planets
@@ -249,29 +253,41 @@ Module SpaceFleet
 
     Private Sub OrdersManagement(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of Ship))
 
-        Dim EntityMapping = DrawMap(Planets, YourShips, AllShips)
+        Do
 
-        Console.WriteLine()
-        Console.WriteLine("Select a ship to move")
-        Dim SelectedShip = SelectShipOnMap(EntityMapping)
+            Dim EntityMapping = DrawMap(Planets, YourShips, AllShips)
 
-        If SelectedShip Is Nothing Then
-            Return
-        End If
+            Console.WriteLine()
+            Console.WriteLine("SELECT SHIP")
+            Dim SelectedShip = SelectShipOnMap(EntityMapping)
 
-        Console.WriteLine()
-        Console.WriteLine("Select a destination")
-        Dim SelectedEntity As IConsoleEntity = SelectAnythingOnMap(EntityMapping)
+            If SelectedShip Is Nothing Then
+                Return
+            End If
 
-        If SelectedEntity.Name = "" Then
-            Return
-        End If
+            Console.WriteLine()
+            Console.WriteLine("SELECT DESTINATION")
+            Dim SelectedEntity As IConsoleEntity = SelectAnythingOnMap(EntityMapping)
 
-        SelectedShip.Destination = SelectedEntity.Location
-        Feedback(String.Format("sending {0} en route to {1}pc", SelectedShip.Name, SelectedEntity.Location))
+            If SelectedEntity Is Nothing Then
+                Return
+            End If
 
-        Console.WriteLine("Press 'a' for another or 'x' if finished")
-        'TODO get input here
+            SelectedShip.Destination = SelectedEntity.Location
+
+            Console.WriteLine()
+
+            Console.WriteLine("Ok, sending {0} to {1}pc", SelectedShip.Name, SelectedEntity.Location)
+            Console.WriteLine()
+            Console.WriteLine("[A] Manage another")
+            Console.WriteLine("[Anything else] Stop")
+            Dim Choice As ConsoleKey = UserChoice()
+
+            If Choice <> ConsoleKey.A Then
+                Exit Do
+            End If
+
+        Loop
 
     End Sub
 
@@ -282,14 +298,18 @@ Module SpaceFleet
 
         If EntityMapping.Count > 0 Then
 
-            Dim Selection = GetNumber("Enter [number]: ")
+            Dim Selection = GetNumber("Enter [number] or press return to cancel: ")
 
             If Selection.Cancelled Then
-                Return New Ship()
+                Return Nothing
             End If
 
             Do Until EntityMapping.ContainsKey(Selection.Number)
-                Selection = GetNumber("No such thing. Enter a [number] from above: ")
+                Selection = GetNumber("No such thing. Enter [number] from above or press return: ")
+
+                If Selection.Cancelled Then
+                    Return Nothing
+                End If
             Loop
 
             Return EntityMapping(Selection.Number)
@@ -305,7 +325,7 @@ Module SpaceFleet
 
         If EntityMapping.Count > 0 Then
 
-            Dim ShipSelection = GetNumber("Enter [ship number] (enter blank to cancel): ")
+            Dim ShipSelection = GetNumber("Enter [ship number] or press return to cancel: ")
 
             If ShipSelection.Cancelled Then
                 Return Nothing
@@ -313,11 +333,19 @@ Module SpaceFleet
 
             Do Until EntityMapping.ContainsKey(ShipSelection.Number) _
                 AndAlso TypeOf EntityMapping(ShipSelection.Number) Is Ship
-                ShipSelection = GetNumber("No such ship. Enter a [ship number] from above: ")
+                ShipSelection = GetNumber("No such ship. Enter [number] from above or press return: ")
+
+                If ShipSelection.Cancelled Then
+                    Return Nothing
+                End If
             Loop
 
             Do Until TypeOf CType(EntityMapping(ShipSelection.Number), Ship).Owner Is Human
                 ShipSelection = GetNumber("That ship isn't yours; try again: ")
+
+                If ShipSelection.Cancelled Then
+                    Return Nothing
+                End If
             Loop
 
             Return CType(EntityMapping(ShipSelection.Number), Ship)
@@ -427,14 +455,18 @@ Module SpaceFleet
 
         If EntityMapping.Count > 0 Then
 
-            Dim Selection = GetNumber("Enter [number] or press return cancel: ")
+            Dim Selection = GetNumber("Enter [number] or press return to cancel: ")
 
             If Selection.Cancelled Then
                 Return Nothing
             End If
 
             Do Until EntityMapping.ContainsKey(Selection.Number) AndAlso TypeOf EntityMapping(Selection.Number) Is Planet
-                Selection = GetNumber("No such planet. Enter a [number] from above or press return: ")
+                Selection = GetNumber("No such planet. Enter [number] from above or press return: ")
+
+                If Selection.Cancelled Then
+                    Return Nothing
+                End If
             Loop
 
             Return CType(EntityMapping(Selection.Number), Planet)
@@ -653,7 +685,7 @@ Module SpaceFleet
 
     Public Function GetNumber(Question As String) As NumberModel
 
-        Console.Write(Question)
+        Console.Write("  {0}", Question)
         Dim InputString = Console.ReadLine
 
         Dim InputModel As New NumberModel(0, False)
