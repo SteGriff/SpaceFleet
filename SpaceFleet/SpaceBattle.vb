@@ -1,12 +1,14 @@
 ﻿Public Class SpaceBattle
 
     Dim Age As Integer
+    Dim Location As Integer
 
-    Public Sub New()
+    Public Sub New(Location As Integer)
         Age = 0
+        Me.Location = Location
     End Sub
 
-    Private Sub Intro(PlayerTeam As List(Of Ship), Hostiles As List(Of Ship))
+    Private Sub Intro(PlayerTeam As IEnumerable(Of Ship), Hostiles As IEnumerable(Of Ship))
 
         Console.Clear()
         Console.WriteLine()
@@ -15,11 +17,11 @@
         Console.ForegroundColor = ConsoleColor.Red
         Console.Write("RED ALERT")
         ResetConsole()
-        Console.Write(" --------")
+        Console.WriteLine(" --------")
 
         Console.WriteLine()
         Console.ForegroundColor = ConsoleColor.Red
-        Console.WriteLine("Units entering combat")
+        Console.WriteLine("  Units entering combat!")
         ResetConsole()
 
         TabbedTeamList(PlayerTeam, "Allied units")
@@ -32,7 +34,7 @@
 
     End Sub
 
-    Private Sub Banner(PlayerTeam As List(Of Ship), Hostiles As List(Of Ship))
+    Private Sub Banner(PlayerTeam As IEnumerable(Of Ship), Hostiles As IEnumerable(Of Ship))
 
         Console.Clear()
         Console.WriteLine()
@@ -41,22 +43,20 @@
         Console.ForegroundColor = ConsoleColor.Red
         Console.Write("BATTLE")
         ResetConsole()
-        Console.Write(" --------")
+        Console.WriteLine(" --------")
 
         TabbedTeamList(PlayerTeam, "Allied units")
         TabbedTeamList(Hostiles, "Hostile forces")
 
-
-
     End Sub
 
-    Private Sub TabbedTeamList(Team As List(Of Ship), TeamLabel As String)
+    Private Sub TabbedTeamList(Team As IEnumerable(Of Ship), TeamLabel As String)
 
         Console.WriteLine()
-        Console.WriteLine("{0}:", TeamLabel)
+        Console.WriteLine("{0}:", TeamLabel.ToUpper())
 
         For Each S As Ship In Team
-            Console.Write(vbTab)
+            Console.Write("  ")
 
             'Name in colour
             S.WriteName()
@@ -67,54 +67,80 @@
 
     End Sub
 
-    Public Sub Fight(ByRef Ships As List(Of Ship))
+    Public Sub Fight(ByRef AllShips As List(Of Ship))
 
-        Dim PlayerTeam As List(Of Ship) = Ships.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
-        Dim Hostiles As List(Of Ship) = Ships.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()
+        'All ships with engaged flag on this spot
+        Dim Combatants = AllShips.Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location))
+
+        Dim PlayerTeam As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
+        Dim Hostiles As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()
 
         'Display intro and wait for key press
         Intro(PlayerTeam, Hostiles)
 
         Do
-            'We'll check condition at end of loop (after firing)
+            For Each S As Ship In Combatants.OrderBy(Function(x) (x.Warp))
 
-            Banner(PlayerTeam, Hostiles)
+                Banner(PlayerTeam, Hostiles)
 
-            For Each S As Ship In Ships.OrderBy(Function(x) (x.Warp))
+                If S.Dead Then
+                    Exit For
+                End If
 
-                Dim Enemies = EnemiesOf(S, Ships)
+                Dim Enemies = EnemiesOf(S, Combatants)
                 Dim MinPercentHP = Enemies.Min(Function(e) (e.PercentHP))
                 Dim Target = Enemies.Where(Function(e) (e.PercentHP = MinPercentHP)).FirstOrDefault()
 
                 S.FireOn(Target)
 
+                'Remove anyone dead from global ship register
                 If S.Dead Then
-                    Ships.Remove(S)
+                    AllShips.Remove(S)
                 End If
 
                 If Target.Dead Then
-                    Ships.Remove(Target)
+                    AllShips.Remove(Target)
                 End If
+
+                Console.WriteLine()
+                Console.WriteLine("Press return")
+                Console.ReadLine()
 
             Next
 
-            PlayerTeam = Ships.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
-            Hostiles = Ships.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()
-
-            Console.WriteLine()
-            Console.WriteLine("Press return")
-            Console.ReadLine()
+            PlayerTeam = Combatants.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
+            Hostiles = Combatants.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()
 
         Loop Until PlayerTeam.Count = 0 OrElse Hostiles.Count = 0
 
-        Console.WriteLine("End of battle")
-        CleanUp(Ships)
+        AnnounceResult(PlayerTeam, Hostiles)
+        CleanUp(Combatants)
 
         Console.ReadLine()
 
     End Sub
 
-    Private Sub CleanUp(ByRef Ships As List(Of Ship))
+    Private Sub AnnounceResult(PlayerTeam As IEnumerable(Of Ship), Hostiles As IEnumerable(Of Ship))
+
+        Console.WriteLine()
+        Console.WriteLine("Result:")
+
+        InvertConsole()
+
+        Dim WinAnnouncement As String = " MUTUAL DESTRUCTION "
+        If PlayerTeam.Count > 0 Then
+            WinAnnouncement = " VICTORY "
+        ElseIf Hostiles.Count > 0 Then
+            WinAnnouncement = " LOSS "
+        End If
+
+        Console.WriteLine(WinAnnouncement)
+
+        ResetConsole()
+
+    End Sub
+
+    Private Sub CleanUp(ByRef Ships As IEnumerable(Of Ship))
 
         For Each S As Ship In Ships
             S.Engaged = False
@@ -122,9 +148,9 @@
 
     End Sub
 
-    Public Function EnemiesOf(ThisShip As Ship, Ships As List(Of Ship)) As List(Of Ship)
+    Public Function EnemiesOf(ThisShip As Ship, Ships As IEnumerable(Of Ship)) As IEnumerable(Of Ship)
 
-        Return Ships.Where(Function(AShip) (AShip.Owner.Race.Name <> ThisShip.Owner.Race.Name)).ToList()
+        Return Ships.Where(Function(AShip) (AShip.Owner.Race.Name <> ThisShip.Owner.Race.Name))
 
     End Function
 

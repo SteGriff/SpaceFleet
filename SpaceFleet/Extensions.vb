@@ -21,5 +21,9 @@
         Console.BackgroundColor = ConsoleColor.Black
     End Sub
 
+    Public Sub InvertConsole()
+        Console.ForegroundColor = ConsoleColor.Black
+        Console.BackgroundColor = ConsoleColor.Gray
+    End Sub
 
 End Module

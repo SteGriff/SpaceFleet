@@ -267,7 +267,11 @@
 
     Public Sub FireOn(Target As Ship)
 
-        Console.WriteLine("{0} firing on {1}...", Me.Name, Target.Name)
+        Console.WriteLine()
+        Me.WriteName()
+        Console.Write(" firing on ")
+        Target.WriteName()
+        Console.WriteLine("...")
 
         Dim Damages(3) As Integer
         Dim BestDamage As Integer = 0
@@ -287,11 +291,14 @@
         Next
 
         Target.HP -= BestDamage
-        Console.WriteLine("{0}...hit it with {1} for {2} points of damage", vbTab, BestWeapon.ToString(), BestDamage)
+
+        Threading.Thread.Sleep(500)
+        Console.WriteLine("  ...{0} dealt {1} damage!", BestWeapon.ToString(), BestDamage)
 
         If (Target.HP <= 0) Then
-
-            Console.WriteLine("{0} was destroyed!!", Target.Name)
+            Console.Write("  ...")
+            Target.WriteName()
+            Console.WriteLine(" was destroyed!!")
         End If
 
     End Sub

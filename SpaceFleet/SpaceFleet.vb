@@ -790,6 +790,8 @@ Module SpaceFleet
         'Move all moving ships
         For Each S As Ship In AllShips
 
+            'Handle movement
+            ' if battle is detected, 'Engaged' flag is set and involved ships come to stop
             S.Move(AllShips)
 
             If TypeOf S.Owner Is Human Then
@@ -810,18 +812,27 @@ Module SpaceFleet
                 Next
             End If
 
-            'Handle battles
-            If S.Engaged Then
-
-                'All ships with engaged flag on this spot
-                Dim Combatants = AllShips.Where(Function(sh) (sh.Location = S.Location AndAlso sh.Engaged)).ToList()
-
-                Dim Battle As New SpaceBattle()
-                Battle.Fight(Combatants)
-
-            End If
-
         Next
+
+        Dim Combatants = AllShips.Where(Function(x) (x.Engaged))
+
+        Do While Combatants.Count > 0
+
+            For Each S As Ship In Combatants
+
+                'Handle battles
+                Dim Battle As New SpaceBattle(S.Location)
+                Battle.Fight(AllShips)
+                
+                'Collection modified, so we can't continue
+                ' drop out into the Do-Loop and revise the collection
+                Exit For
+
+            Next
+
+            Combatants = AllShips.Where(Function(x) (x.Engaged))
+
+        Loop
 
     End Sub
 
