@@ -106,4 +106,15 @@
         End If
 
     End Sub
+
+    Public Function ClaimableBy(Claimant As Player) As Boolean
+
+        If Me.Owner Is Nothing Then
+            Return True
+        End If
+
+        Return Me.Owner.Name <> Claimant.Name
+
+    End Function
+
 End Class

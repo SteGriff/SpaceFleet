@@ -50,23 +50,6 @@
 
     End Sub
 
-    Private Sub TabbedTeamList(Team As IEnumerable(Of Ship), TeamLabel As String)
-
-        Console.WriteLine()
-        Console.WriteLine("{0}:", TeamLabel.ToUpper())
-
-        For Each S As Ship In Team
-            Console.Write("  ")
-
-            'Name in colour
-            S.WriteName()
-
-            'Hit points after name
-            Console.WriteLine(" ({0}/{1}HP)", S.HP, S.MaxHP)
-        Next
-
-    End Sub
-
     Public Sub Fight(ByRef AllShips As List(Of Ship))
 
         'All ships with engaged flag on this spot
@@ -124,6 +107,8 @@
 
         Console.WriteLine()
         Console.WriteLine("Result:")
+        Console.WriteLine()
+        Console.Write("  ")
 
         InvertConsole()
 
@@ -131,7 +116,7 @@
         If PlayerTeam.Count > 0 Then
             WinAnnouncement = " VICTORY "
         ElseIf Hostiles.Count > 0 Then
-            WinAnnouncement = " LOSS "
+            WinAnnouncement = " DEFEAT "
         End If
 
         Console.WriteLine(WinAnnouncement)

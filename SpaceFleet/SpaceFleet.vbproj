@@ -93,6 +93,7 @@
     <Compile Include="Planet.vb" />
     <Compile Include="PlanetGeneration.vb" />
     <Compile Include="IPlayer.vb" />
+    <Compile Include="PlanetLanding.vb" />
     <Compile Include="Player.vb" />
     <Compile Include="ProductionFocus.vb" />
     <Compile Include="Race.vb" />

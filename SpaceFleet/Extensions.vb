@@ -16,6 +16,23 @@
 
     End Function
 
+    Public Sub TabbedTeamList(Team As IEnumerable(Of Ship), TeamLabel As String)
+
+        Console.WriteLine()
+        Console.WriteLine("{0}:", TeamLabel.ToUpper())
+
+        For Each S As Ship In Team
+            Console.Write("  ")
+
+            'Name in colour
+            S.WriteName()
+
+            'Hit points after name
+            Console.WriteLine(" ({0}/{1}HP)", S.HP, S.MaxHP)
+        Next
+
+    End Sub
+
     Public Sub ResetConsole()
         Console.ForegroundColor = ConsoleColor.Gray
         Console.BackgroundColor = ConsoleColor.Black

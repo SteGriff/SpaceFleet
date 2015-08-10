@@ -93,7 +93,7 @@ Module SpaceFleet
                 You.Technologies(You.Researching).ImproveAndCheckAdvancement(Totals.TechIncome, You.Technologies)
                 You.Money = CInt(You.Money + (Totals.CashIncome * TaxRate))
 
-                MoveAllShips(AllShips, Enemies, Messages)
+                MoveAllShips(AllShips, You, Enemies, Planets, Messages)
                 Debug.WriteLine("")
 
                 'Done with weekly jobs
@@ -785,7 +785,7 @@ Module SpaceFleet
 
     End Sub
 
-    Private Sub MoveAllShips(AllShips As List(Of Ship), Enemies As List(Of Enemy), Messages As List(Of CommsMessage))
+    Private Sub MoveAllShips(AllShips As List(Of Ship), You As Human, Enemies As List(Of Enemy), Planets As List(Of Planet), Messages As List(Of CommsMessage))
 
         'Move all moving ships
         For Each S As Ship In AllShips
@@ -812,6 +812,18 @@ Module SpaceFleet
                 Next
             End If
 
+            'If we have "arrived"
+            If Not S.Moving Then
+
+                Dim PlanetsHere = Planets.Where(Function(p) (p.Location = S.Location AndAlso p.ClaimableBy(You)))
+                If PlanetsHere.Count > 0 Then
+                    Dim PlanetToLand As Planet = PlanetsHere.FirstOrDefault()
+                    Dim Landing As New PlanetLanding(PlanetToLand)
+                    Landing.Land(S)
+                End If
+
+            End If
+
         Next
 
         Dim Combatants = AllShips.Where(Function(x) (x.Engaged))
@@ -823,7 +835,7 @@ Module SpaceFleet
                 'Handle battles
                 Dim Battle As New SpaceBattle(S.Location)
                 Battle.Fight(AllShips)
-                
+
                 'Collection modified, so we can't continue
                 ' drop out into the Do-Loop and revise the collection
                 Exit For

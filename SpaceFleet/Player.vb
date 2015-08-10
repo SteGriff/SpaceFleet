@@ -42,6 +42,12 @@
         End Set
     End Property
 
+    Public ReadOnly Property Name As String Implements IPlayer.Name
+        Get
+            Return Me.Race.Name
+        End Get
+    End Property
+
     Public ReadOnly Property CanSpendMoney As Boolean
         Get
             Return Money > 1000
