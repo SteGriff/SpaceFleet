@@ -1,16 +1,57 @@
 ﻿Public Class PlanetLanding
 
     Dim Planet As Planet
+
     Dim Ship As Ship
 
-    Public Sub New(Planet As Planet)
+    Public Sub New(Planet As Planet, Ship As Ship)
         Me.Planet = Planet
+
+        'N.b. Attacking player can be obtained with Ship.Owner
+        Me.Ship = Ship
+
     End Sub
 
-    Public Sub Land(Ship As Ship)
+    Public Sub Land()
 
-        Me.Ship  = Ship
         Intro()
+
+        If Planet.Population = 0 Then
+            Conquer(True)
+        Else
+            'TODO Conquest
+
+        End If
+
+    End Sub
+
+    Private Sub Conquer(Uninhabited As Boolean)
+
+        Console.Clear()
+        Console.WriteLine()
+
+        Console.Write("--------- ")
+        Console.ForegroundColor = ConsoleColor.Blue
+        Console.Write("LANDING ")
+        Console.ForegroundColor = ConsoleColor.Green
+        Console.Write("[SUCCESS]")
+        ResetConsole()
+        Console.WriteLine(" --------")
+
+        Console.WriteLine()
+
+        If Uninhabited Then
+            Console.Write("Uninhabited planet, ")
+            Planet.WriteName()
+            Console.WriteLine(", was subdued!")
+        Else
+            Planet.Owner.Race.WriteName()
+            Console.Write(" planet, ")
+            Planet.WriteName()
+            Console.WriteLine(", was overthrown!")
+        End If
+
+        ResetConsole()
 
     End Sub
 

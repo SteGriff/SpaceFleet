@@ -19,6 +19,12 @@
     'Which planet do ships come out of (by Planet index)
     Public ConstructionPlanet As Planet
 
+    'Which planet is used to send colonials to new conquests
+    Public FeederPlanet As Planet
+
+    'Fraction of people from feeder to send to new colonies
+    Public SettlersPercent As Decimal
+
     'Planets
     Private MyPlanets As New List(Of Planet)
     Public ReadOnly Property Planets As List(Of Planet)

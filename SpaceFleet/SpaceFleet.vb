@@ -818,8 +818,8 @@ Module SpaceFleet
                 Dim PlanetsHere = Planets.Where(Function(p) (p.Location = S.Location AndAlso p.ClaimableBy(You)))
                 If PlanetsHere.Count > 0 Then
                     Dim PlanetToLand As Planet = PlanetsHere.FirstOrDefault()
-                    Dim Landing As New PlanetLanding(PlanetToLand)
-                    Landing.Land(S)
+                    Dim Landing As New PlanetLanding(PlanetToLand, S)
+                    Landing.Land()
                 End If
 
             End If

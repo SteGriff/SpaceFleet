@@ -1,5 +1,5 @@
 ﻿Public Class Planet
-    Implements IConsoleEntity
+    Implements IConsoleEntity, IColourful
 
     Public MyName As String
     Public Population As Decimal ' x billion people
@@ -11,7 +11,7 @@
     Public Colour As ConsoleColor
     Public Art As String
 
-    Public Owner As IPlayer
+    Public Owner As Player
 
     Public Focus As ProductionFocus
 
@@ -82,7 +82,7 @@
 
     End Sub
 
-    Public Sub WriteName() Implements IConsoleEntity.WriteName
+    Public Sub WriteName() Implements IColourful.WriteName
 
         Console.ForegroundColor = Me.Colour
         Console.Write(Me.Name)

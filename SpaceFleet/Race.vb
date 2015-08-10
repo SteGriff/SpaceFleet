@@ -1,4 +1,5 @@
 ﻿Public Class Race
+    Implements IColourful
 
     Public Name As String
     Public Face As String
@@ -27,6 +28,14 @@
 
         Console.ForegroundColor = Colour
         Console.Write(Face)
+        ResetConsole()
+
+    End Sub
+
+    Public Sub WriteName() Implements IColourful.WriteName
+
+        Console.ForegroundColor = Me.Colour
+        Console.Write(Me.Name)
         ResetConsole()
 
     End Sub

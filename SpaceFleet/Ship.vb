@@ -1,5 +1,5 @@
 ﻿Public Class Ship
-    Implements ICloneable, IConsoleEntity
+    Implements ICloneable, IConsoleEntity, IColourful
 
     Public DesignName As String
     Public MyName As String
@@ -125,7 +125,7 @@
 
     End Function
 
-    Public Sub WriteName() Implements IConsoleEntity.WriteName
+    Public Sub WriteName() Implements IColourful.WriteName
 
         If TypeOf Me.Owner Is Human Then
             ResetConsole()
