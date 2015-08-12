@@ -54,13 +54,12 @@
         Dim Colour As ConsoleColor = RandomConsoleColour(Randomiser)
 
         Dim Capacity As Decimal = Size * (1 + Randomiser.NextDouble()) * 4
-        Dim Population As Decimal = Capacity / (5 + Randomiser.Next(6))
 
         Dim Resources As Byte = Size * Randomiser.Next(10, 40)
 
         Dim Location As Long = Star.Location + (2 * Number)
 
-        Dim Planet As New Planet(Name, Location, Population, Capacity, Resources, Colour, Art)
+        Dim Planet As New Planet(Name, Location, 0, Capacity, Resources, Colour, Art)
 
         Return Planet
 

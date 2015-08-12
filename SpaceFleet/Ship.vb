@@ -1,39 +1,19 @@
 ﻿Public Class Ship
+    Inherits MovingConsoleEntity
     Implements ICloneable, IConsoleEntity, IColourful
 
     Public DesignName As String
-    Public MyName As String
     Public HP As Byte
     Public MaxHP As Byte
     Public Warp As Byte
     Public MyLocation As Integer
-    Public Destination As Integer
 
     Public Attack As Byte()
     Public Defence As Byte()
 
     Public Engaged As Boolean
-    Public Owner As Player
 
     Public Const InfoTemplate As String = "{0,-24}{1,-6}{2,-12}{3,-12}{4,-8}"
-
-    Public Property Location As Integer Implements IConsoleEntity.Location
-        Get
-            Return MyLocation
-        End Get
-        Set(value As Integer)
-            MyLocation = value
-        End Set
-    End Property
-
-    Public Property Name As String Implements IConsoleEntity.Name
-        Get
-            Return MyName
-        End Get
-        Set(value As String)
-            MyName = value
-        End Set
-    End Property
 
     Public ReadOnly Property PercentHP As Decimal
         Get
@@ -42,11 +22,12 @@
     End Property
 
     Sub New()
+        MyBase.New()
         Me.DesignName = ""
-        Me.Name = ""
     End Sub
 
     Sub New(ByVal DesignName As String, ByVal HP As Byte, ByVal Warp As Byte, Attack As Byte(), Defence As Byte())
+        MyBase.New()
 
         Me.DesignName = DesignName
         Me.Name = DesignName & " " & Guid.NewGuid().ToString.Substring(0, 5)
@@ -140,42 +121,6 @@
 
     End Sub
 
-    Public Sub Draw() Implements IConsoleEntity.Draw
-
-        Dim LocationString As String = ""
-        If Moving() Then
-            'TODO show number of weeks left in transport
-            LocationString = String.Format("{0}pc -> {1}pc", Me.Location, Me.Destination)
-        Else
-            LocationString = String.Format("{0}pc", Me.Location)
-        End If
-
-        If TypeOf Me.Owner Is Human Then
-            Console.BackgroundColor = ConsoleColor.White
-            Console.ForegroundColor = ConsoleColor.Black
-        Else
-            Console.BackgroundColor = ConsoleColor.White
-            Console.ForegroundColor = Me.Owner.Race.Colour
-        End If
-
-        Console.Write("{0}{1}{2}", Me.Art(), vbTab, Me.Name)
-
-        'Reset console defaults
-        ResetConsole()
-
-        Console.Write(" {0}pc", Me.Location)
-
-        'Write destination if the ship has belongs to the player
-        If Me.Destination <> Me.Location _
-            AndAlso TypeOf Me.Owner Is Human Then
-            Console.Write(" -> {0}pc", Me.Destination)
-        End If
-
-        'End the line
-        Console.WriteLine()
-
-    End Sub
-
     Public Function Art() As String
 
         Dim Images() As String = {">", "}>", "}->", "}=>", "}]=>"}
@@ -187,10 +132,6 @@
 
         Return Images(Size)
 
-    End Function
-
-    Public Function Moving() As Boolean
-        Return Location <> Destination
     End Function
 
     Public Sub Move(AllShips As List(Of Ship))

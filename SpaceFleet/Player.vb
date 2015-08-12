@@ -25,6 +25,8 @@
     'Fraction of people from feeder to send to new colonies
     Public SettlersPercent As Decimal
 
+    Public TopFleetNumber As Integer
+
     'Planets
     Private MyPlanets As New List(Of Planet)
     Public ReadOnly Property Planets As List(Of Planet)

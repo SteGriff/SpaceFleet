@@ -85,10 +85,12 @@
     <Compile Include="CommsMessage.vb" />
     <Compile Include="Enemy.vb" />
     <Compile Include="Extensions.vb" />
+    <Compile Include="Fleet.vb" />
     <Compile Include="Human.vb" />
     <Compile Include="IColourful.vb" />
     <Compile Include="IConsoleEntity.vb" />
     <Compile Include="Map.vb" />
+    <Compile Include="MovingConsoleEntity.vb" />
     <Compile Include="MyPlanet.vb" />
     <Compile Include="NumberModel.vb" />
     <Compile Include="Planet.vb" />

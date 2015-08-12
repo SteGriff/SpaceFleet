@@ -16,16 +16,22 @@
 
         Intro()
 
+        Dim Succeeded As Boolean = False
+
         If Planet.Population = 0 Then
-            Conquer(True)
+            Succeeded = Conquer(True)
         Else
             'TODO Conquest
+            Succeeded = Conquer(False)
+        End If
 
+        If Succeeded Then
+            Planet.Claim(Ship.Owner)
         End If
 
     End Sub
 
-    Private Sub Conquer(Uninhabited As Boolean)
+    Private Function Conquer(Uninhabited As Boolean) As Boolean
 
         Console.Clear()
         Console.WriteLine()
@@ -53,7 +59,9 @@
 
         ResetConsole()
 
-    End Sub
+        Return True
+
+    End Function
 
     Private Sub Intro()
 

@@ -96,6 +96,10 @@
         Me.Owner = Claimant
         Claimant.Planets.Add(Me)
 
+        If Me.Population = 0 Then
+            Me.PopulateSparsely()
+        End If
+
         'Change race territory and pass out
         If Me.Location - Claimant.Influence < Claimant.TerritoryBegin Then
             Claimant.TerritoryBegin = Me.Location - Claimant.Influence
@@ -116,5 +120,9 @@
         Return Me.Owner.Name <> Claimant.Name
 
     End Function
+
+    Private Sub PopulateSparsely()
+        Population = Capacity / (5 + Rnd(6))
+    End Sub
 
 End Class
