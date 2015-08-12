@@ -1,17 +1,15 @@
 ﻿Public Class Ship
-    Inherits MovingConsoleEntity
+    Inherits MobileEntity
     Implements ICloneable, IConsoleEntity, IColourful
 
     Public DesignName As String
     Public HP As Byte
     Public MaxHP As Byte
-    Public Warp As Byte
+    Public Shadows Warp As Byte
     Public MyLocation As Integer
 
     Public Attack As Byte()
     Public Defence As Byte()
-
-    Public Engaged As Boolean
 
     Public Const InfoTemplate As String = "{0,-24}{1,-6}{2,-12}{3,-12}{4,-8}"
 
@@ -94,7 +92,7 @@
 
     End Function
 
-    Function BuildClonedInstance(Owner As Player, AllShips As List(Of Ship)) As Ship
+    Function BuildClonedInstance(Owner As Player, AllShips As List(Of MobileEntity)) As Ship
 
         Dim NewShip As Ship = Me.Clone()
         NewShip.Owner = Owner
@@ -106,105 +104,20 @@
 
     End Function
 
-    Public Sub WriteName() Implements IColourful.WriteName
+    Public Overrides ReadOnly Property Art As String
+        Get
 
-        If TypeOf Me.Owner Is Human Then
-            ResetConsole()
-        Else
-            Console.ForegroundColor = Me.Owner.Race.Colour
-        End If
+            Dim Images() As String = {">", "}>", "}->", "}=>", "}]=>"}
+            Dim Size As Integer = Math.Floor(MaxHP / 20)
 
-        Console.Write(Me.Name)
-
-        'Reset console defaults
-        ResetConsole()
-
-    End Sub
-
-    Public Function Art() As String
-
-        Dim Images() As String = {">", "}>", "}->", "}=>", "}]=>"}
-        Dim Size As Integer = Math.Floor(MaxHP / 20)
-
-        If Size > 4 Then
-            Size = 4
-        End If
-
-        Return Images(Size)
-
-    End Function
-
-    Public Sub Move(AllShips As List(Of Ship))
-
-        'Can't move if in battle
-        If Engaged OrElse Location = Destination Then
-            Return
-        End If
-
-        Dim OldLocation As Integer = Location
-
-        If Location < Destination Then
-            Dim NewLocation As Integer = Location + Warp
-
-            'Correct for overshoot
-            If NewLocation > Destination Then
-                NewLocation = Destination
+            If Size > 4 Then
+                Size = 4
             End If
 
-            'Set location
-            Location = NewLocation
+            Return Images(Size)
 
-        ElseIf Location > Destination Then
-            Dim NewLocation As Integer = Location - Warp
-
-            'Correct for overshoot
-            If NewLocation < Destination Then
-                NewLocation = Destination
-            End If
-
-            Location = NewLocation
-
-        End If
-
-        Debug.WriteLineIf(Location < 50, String.Format("{0} moved from {1} to {2}pc", Me.Name, OldLocation, Location))
-
-        'Check if we passed another ship
-        For Each S As Ship In AllShips
-
-            If S.Equals(Me) Then
-                Continue For
-            End If
-
-            If S.IsBetween(OldLocation, Location) AndAlso S.IsEnemy(Me) Then
-                'Stop at that location and engage in battle
-                Me.Location = S.Location
-                Me.Engaged = True
-                S.Engaged = True
-                Exit For
-            End If
-
-        Next
-
-    End Sub
-
-    Public Function IsBetween(A As Integer, B As Integer)
-
-        If A > B Then
-            Return A >= Me.Location AndAlso Me.Location >= B
-        ElseIf A < B Then
-            Return A <= Me.Location AndAlso Me.Location <= B
-        Else
-            'A == B
-            Return A = Me.Location
-        End If
-
-    End Function
-
-    Public Function IsEnemy(S As Ship) As Boolean
-
-        Return S.Owner.GetType().Name <> Me.Owner.GetType().Name
-
-    End Function
+        End Get
+    End Property
 
     Public Sub FireOn(Target As Ship)
 

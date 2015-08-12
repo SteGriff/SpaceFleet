@@ -31,7 +31,7 @@ Module SpaceFleet
         Dim PlayersFirstPlanets As New List(Of Planet)({Earth, Mars})
 
         'Initialise master ship list
-        Dim AllShips As New List(Of Ship)
+        Dim AllShips As New List(Of MobileEntity)
 
         'Home star for initial location
         Dim Sol As New Star(0, False)
@@ -194,7 +194,7 @@ Module SpaceFleet
         Return kvp.Key
     End Function
 
-    Private Function DrawMap(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of Ship)) As Dictionary(Of Integer, IConsoleEntity)
+    Private Function DrawMap(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of MobileEntity)) As Dictionary(Of Integer, IConsoleEntity)
 
         'TODO Future feature - Sensors technology affect range
         'Dim SensorRange As Integer = Technologies(TechnologyType.Sensors) * 10
@@ -251,7 +251,7 @@ Module SpaceFleet
 
 #Region "Orders"
 
-    Private Sub OrdersManagement(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of Ship))
+    Private Sub OrdersManagement(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of MobileEntity))
 
         Do
 
@@ -785,7 +785,7 @@ Module SpaceFleet
 
     End Sub
 
-    Private Sub MoveAllShips(AllShips As List(Of Ship), You As Human, Enemies As List(Of Enemy), Planets As List(Of Planet), Messages As List(Of CommsMessage))
+    Private Sub MoveAllShips(AllShips As List(Of MobileEntity), You As Human, Enemies As List(Of Enemy), Planets As List(Of Planet), Messages As List(Of CommsMessage))
 
         'Move all moving ships
         For Each S As Ship In AllShips

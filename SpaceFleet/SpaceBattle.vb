@@ -50,10 +50,21 @@
 
     End Sub
 
-    Public Sub Fight(ByRef AllShips As List(Of Ship))
+    Public Sub Fight(ByRef AllShips As List(Of MobileEntity))
 
-        'All ships with engaged flag on this spot
-        Dim Combatants = AllShips.Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location))
+        'All things on this spot, with engaged flag set
+        Dim PotentialCombatants = AllShips.Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location))
+        Dim Combatants As New List(Of Ship)
+
+        'Ehhh this could be done with LINQ
+        For Each E As MobileEntity In PotentialCombatants
+            If TypeOf E Is Ship Then
+                Combatants.Add(E)
+            Else
+                Dim FleetShips = DirectCast(E, Fleet).Ships
+                Combatants.AddRange(FleetShips)
+            End If
+        Next
 
         Dim PlayerTeam As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
         Dim Hostiles As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()

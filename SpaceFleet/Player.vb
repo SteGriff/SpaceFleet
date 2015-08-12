@@ -68,7 +68,7 @@
 
     End Function
 
-    Public Sub New(R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of Ship))
+    Public Sub New(R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of MobileEntity))
 
         Me.Race = R
 
@@ -84,7 +84,7 @@
 
     End Sub
 
-    Public Sub InitialiseShips(UniversalShips As List(Of Ship))
+    Public Sub InitialiseShips(UniversalShips As List(Of MobileEntity))
 
         Dim Attack As Byte() = {1, 0, 0}
         Dim Defence As Byte() = {0, 0, 0}
@@ -101,7 +101,7 @@
 
     End Sub
 
-    Public Function TryBuildShip(UniversalShips As List(Of Ship)) As Boolean
+    Public Function TryBuildShip(UniversalShips As List(Of MobileEntity)) As Boolean
 
         'Production points have satisfied current build job
         If (ProductionPoints >= CurrentlyBuilding.Complexity) Then
