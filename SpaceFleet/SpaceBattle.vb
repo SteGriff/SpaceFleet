@@ -77,7 +77,7 @@
 
                 Banner(PlayerTeam, Hostiles)
 
-                If S.Dead Then
+                If S.NoHealth Then
                     Exit For
                 End If
 
@@ -88,12 +88,12 @@
                 S.FireOn(Target)
 
                 'Remove anyone dead from global ship register
-                If S.Dead Then
-                    AllShips.Remove(S)
+                If S.NoHealth Then
+                    S.Die(AllShips)
                 End If
 
-                If Target.Dead Then
-                    AllShips.Remove(Target)
+                If Target.NoHealth Then
+                    Target.Die(AllShips)
                 End If
 
                 Console.WriteLine()

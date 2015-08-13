@@ -5,8 +5,8 @@
     Public DesignName As String
     Public HP As Byte
     Public MaxHP As Byte
-    Public Shadows Warp As Byte
     Public MyLocation As Integer
+    Public Fleet As Fleet
 
     Public Attack As Byte()
     Public Defence As Byte()
@@ -16,6 +16,13 @@
     Public ReadOnly Property PercentHP As Decimal
         Get
             Return (HP / MaxHP) * 100
+        End Get
+    End Property
+
+    Private MyWarp As Integer
+    Public Overrides ReadOnly Property Warp As Integer
+        Get
+            Return MyWarp
         End Get
     End Property
 
@@ -31,7 +38,7 @@
         Me.Name = DesignName & " " & Guid.NewGuid().ToString.Substring(0, 5)
         Me.HP = HP
         Me.MaxHP = HP
-        Me.Warp = Warp
+        MyWarp = Warp
 
         Me.Attack = Attack
         Me.Defence = Defence
@@ -80,7 +87,7 @@
         End Get
     End Property
 
-    Public ReadOnly Property Dead() As Boolean
+    Public ReadOnly Property NoHealth() As Boolean
         Get
             Return HP <= 0
         End Get
@@ -157,4 +164,31 @@
 
     End Sub
 
+    Public Sub Die(AllShips As List(Of MobileEntity))
+
+        LeaveFleet(AllShips)
+        AllShips.Remove(Me)
+
+    End Sub
+
+    Public Sub JoinFleet(Fleet As Fleet)
+
+        Debug.WriteLine(Me.Name + " joins fleet: " + Fleet.Name)
+
+        'Set fleet pointer
+        Me.Fleet = Fleet
+        Fleet.Ships.Add(Me)
+
+    End Sub
+
+    Public Sub LeaveFleet(AllShips As List(Of MobileEntity))
+
+        'Remove self from fleet and unset my fleet pointer
+        Me.Fleet.Ships.Remove(Me)
+        Me.Fleet = Nothing
+
+        'Add self to universal ship register
+        AllShips.Add(Me)
+
+    End Sub
 End Class

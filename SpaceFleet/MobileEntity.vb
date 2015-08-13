@@ -7,7 +7,11 @@
         End Get
     End Property
 
-    Overridable Property Warp As Integer
+    Overridable ReadOnly Property Warp As Integer
+        Get
+            Return 0
+        End Get
+    End Property
 
     Protected FleetNumber As Integer
 
@@ -116,10 +120,16 @@
 
     End Function
 
+    Public Function IsTeammate(S As Ship) As Boolean
+
+        Return S.Owner.Equals(Me.Owner)
+
+    End Function
+
     Public Sub Move(AllShips As List(Of MobileEntity))
 
         'Can't move if in battle
-        If Engaged OrElse Location = Destination Then
+        If Engaged Then
             Return
         End If
 
@@ -158,19 +168,31 @@
             End If
 
             If E.IsBetween(OldLocation, Location) Then
-                If E.IsEnemy(Me) Then
+
+                If IsEnemy(E) Then
                     'Stop at that location and engage in battle
                     Me.Location = E.Location
                     Me.Engaged = True
                     E.Engaged = True
                     Exit For
-                Else
+
+                ElseIf Location = Destination AndAlso _
+                    Location = E.Location AndAlso _
+                    IsTeammate(E) Then
+
+                    'Not an enemy and we have stopped on the same spot as the other guy
                     'They're allies - fleet up
                     'Does fleet already exist?
                     If TypeOf E Is Fleet Then
                         DirectCast(E, Fleet).AssembleFleet(E.Owner, E.Location, AllShips)
+
                     ElseIf TypeOf Me Is Fleet Then
                         DirectCast(Me, Fleet).AssembleFleet(Me.Owner, Me.Location, AllShips)
+
+                    Else
+                        'No existing fleet, so form one
+                        Dim F As New Fleet(Me.Owner, Me.Location, AllShips)
+
                     End If
                 End If
 
