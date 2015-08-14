@@ -20,6 +20,8 @@
     Public Destination As Integer
     Public Engaged As Boolean
 
+    Private OldLocation As Integer
+
     Private MyLocation As Integer
     Public Property Location As Integer Implements IConsoleEntity.Location
         Get
@@ -133,7 +135,7 @@
             Return
         End If
 
-        Dim OldLocation As Integer = Location
+        OldLocation = Location
 
         If Location < Destination Then
             Dim NewLocation As Integer = Location + Warp
@@ -160,46 +162,94 @@
 
         Debug.WriteLineIf(Location < 50, String.Format("{0} moved from {1} to {2}pc", Me.Name, OldLocation, Location))
 
-        'Check if we passed another ship
-        For Each E As MobileEntity In AllShips
-
-            If E.Equals(Me) Then
-                Continue For
-            End If
-
-            If E.IsBetween(OldLocation, Location) Then
-
-                If IsEnemy(E) Then
-                    'Stop at that location and engage in battle
-                    Me.Location = E.Location
-                    Me.Engaged = True
-                    E.Engaged = True
-                    Exit For
-
-                ElseIf Location = Destination AndAlso _
-                    Location = E.Location AndAlso _
-                    IsTeammate(E) Then
-
-                    'Not an enemy and we have stopped on the same spot as the other guy
-                    'They're allies - fleet up
-                    'Does fleet already exist?
-                    If TypeOf E Is Fleet Then
-                        DirectCast(E, Fleet).AssembleFleet(E.Owner, E.Location, AllShips)
-
-                    ElseIf TypeOf Me Is Fleet Then
-                        DirectCast(Me, Fleet).AssembleFleet(Me.Owner, Me.Location, AllShips)
-
-                    Else
-                        'No existing fleet, so form one
-                        Dim F As New Fleet(Me.Owner, Me.Location, AllShips)
-
-                    End If
-                End If
-
-            End If
-
-        Next
+        'Check ship interactions - did we pass another ship? Shall we fleet/battle?
+        'There will be unprocessed ships if the AllShips collection had to change
+        ' i.e. if there was a battle or fleet change
+        ProcessAllInteractions(AllShips, AllShips)
 
     End Sub
+
+    ''' <summary>
+    ''' Recursive function to process interactions with some subset of ships
+    ''' </summary>
+    ''' <param name="SomeShips">Ships to potentially interact with</param>
+    ''' <param name="AllShips">All ships in the universe</param>
+    Private Sub ProcessAllInteractions(SomeShips As List(Of MobileEntity), AllShips As List(Of MobileEntity))
+
+        'Clone AllShips into UnprocessedShips, but remove them
+        ' when they are later processed
+        Dim UnprocessedShips As New List(Of MobileEntity)(SomeShips)
+
+        For Each E As MobileEntity In SomeShips
+
+            UnprocessedShips.Remove(E)
+            Dim ForState = ProcessEntityInteractions(E, AllShips)
+
+            Select Case ForState
+                Case ForLoopTransition.ContinueFor
+                    Continue For
+                Case ForLoopTransition.ExitFor
+                    Exit For
+            End Select
+        Next
+
+        'Base case is we're finished and there are no unprocessed ships
+
+        'Any unprocessed, run the function on the subset
+        If UnprocessedShips.Count > 0 Then
+            'Recursive call, passing in the as-yet unprocessed ships
+            ProcessAllInteractions(UnprocessedShips, AllShips)
+        End If
+
+    End Sub
+
+    Private Function ProcessEntityInteractions(E As MobileEntity, AllShips As List(Of MobileEntity)) As ForLoopTransition
+
+        'Don't interact with yourself
+        If E.Equals(Me) Then
+            Return ForLoopTransition.ContinueFor
+        End If
+
+        'Check collisions
+        If E.IsBetween(OldLocation, Location) Then
+
+            If IsEnemy(E) Then
+                'Stop at that location and engage in battle
+                Me.Location = E.Location
+                Me.Engaged = True
+                E.Engaged = True
+                Return ForLoopTransition.ExitFor
+
+            ElseIf Location = Destination AndAlso _
+                Location = E.Location AndAlso _
+                IsTeammate(E) Then
+
+                'Not an enemy and we have stopped on the same spot as the other guy
+                'They're allies - fleet up
+                'Does fleet already exist?
+                If TypeOf E Is Fleet Then
+                    DirectCast(E, Fleet).AssembleFleet(E.Owner, E.Location, AllShips)
+
+                ElseIf TypeOf Me Is Fleet Then
+                    DirectCast(Me, Fleet).AssembleFleet(Me.Owner, Me.Location, AllShips)
+
+                Else
+                    'No existing fleet, so form one
+                    Dim F As New Fleet(Me.Owner, Me.Location, AllShips)
+                    Return ForLoopTransition.ExitFor
+                End If
+            End If
+
+        End If
+
+        Return ForLoopTransition.NextFor
+
+    End Function
+
+    Private Enum ForLoopTransition
+        NextFor
+        ContinueFor
+        ExitFor
+    End Enum
 
 End Class
