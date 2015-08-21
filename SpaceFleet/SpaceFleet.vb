@@ -10,7 +10,7 @@ Module SpaceFleet
     ' Stephen Griffiths 2011 - 2015
 
     Dim Randomiser As Random
-    'Dim Technologies(10) As Technology
+    Public ReportMessages As New List(Of String)
 
     Sub Main()
 
@@ -60,8 +60,8 @@ Module SpaceFleet
         Dim Week As Integer = 0
         Dim GameOver As Boolean = False
         Dim TurnTaken As Boolean = True
-        Dim Messages As New List(Of CommsMessage)
-
+        Dim CommsMessages As New List(Of CommsMessage)
+        
         Do Until GameOver
 
             Dim Totals As SystemTotals
@@ -93,7 +93,8 @@ Module SpaceFleet
                 You.Technologies(You.Researching).ImproveAndCheckAdvancement(Totals.TechIncome, You.Technologies)
                 You.Money = CInt(You.Money + (Totals.CashIncome * TaxRate))
 
-                MoveAllShips(AllShips, You, Enemies, Planets, Messages)
+                ProcessMovement(AllShips, You, Enemies, Planets, CommsMessages)
+                ProcessCombat(AllShips)
                 Debug.WriteLine("")
 
                 'Done with weekly jobs
@@ -102,16 +103,17 @@ Module SpaceFleet
 
                 If Week > 0 Then
 
-                    If (Messages.Count > 0) Then
-                        CommsReport(Messages)
-                        Messages.Clear()
+                    If (CommsMessages.Count > 0) Then
+                        CommsReport(CommsMessages)
+                        CommsMessages.Clear()
 
                         'Refresh screen
                         Readout(Week, You, Totals)
                     End If
 
                     'Give weekly report if this is not the first turn
-                    WeeklyReport(Week, You, PopulationGrowth, Totals, ShipJustBuilt)
+                    WeeklyReport(Week, You, PopulationGrowth, Totals, ShipJustBuilt, ReportMessages)
+                    ReportMessages.Clear()
 
                 End If
 
@@ -223,7 +225,7 @@ Module SpaceFleet
         Next
 
         'Add all visible ships to Entities
-        For Each S As Ship In AllShips.OrderBy(Function(x) (x.Location))
+        For Each S As MobileEntity In AllShips.OrderBy(Function(x) (x.Location))
 
             If S.Location > FurthestExploredReach Then
                 Exit For
@@ -258,7 +260,10 @@ Module SpaceFleet
             Dim EntityMapping = DrawMap(Planets, YourShips, AllShips)
 
             Console.WriteLine()
+            InvertConsole()
             Console.WriteLine("SELECT SHIP")
+            ResetConsole()
+
             Dim SelectedShip = SelectShipOnMap(EntityMapping)
 
             If SelectedShip Is Nothing Then
@@ -266,21 +271,34 @@ Module SpaceFleet
             End If
 
             Console.WriteLine()
+            InvertConsole()
             Console.WriteLine("SELECT DESTINATION")
-            Dim SelectedEntity As IConsoleEntity = SelectAnythingOnMap(EntityMapping)
+            ResetConsole()
 
-            If SelectedEntity Is Nothing Then
-                Return
+            Dim Selection = SelectDestinationOnMap(EntityMapping, SelectedShip, AllShips)
+
+            If Selection.Entity Is Nothing Then
+
+                If Selection.HasCommand AndAlso Selection.Command = "D" AndAlso TypeOf SelectedShip Is Fleet Then
+                    Console.WriteLine()
+                    Console.WriteLine("Ok, {0} disbanded into individual ships", SelectedShip.Name)
+                    DirectCast(SelectedShip, Fleet).DisbandFleet(AllShips)
+                Else
+                    'Cancelled
+                    Return
+                End If
+
+            Else
+
+                SelectedShip.Destination = Selection.Entity.Location
+                Console.WriteLine()
+                Console.WriteLine("Ok, sending {0} to {1}pc", SelectedShip.Name, Selection.Entity.Location)
+
             End If
 
-            SelectedShip.Destination = SelectedEntity.Location
-
-            Console.WriteLine()
-
-            Console.WriteLine("Ok, sending {0} to {1}pc", SelectedShip.Name, SelectedEntity.Location)
             Console.WriteLine()
             Console.WriteLine("[A] Manage another")
-            Console.WriteLine("[Anything else] Stop")
+            Console.WriteLine("[Return] Stop")
             Dim Choice As ConsoleKey = UserChoice()
 
             If Choice <> ConsoleKey.A Then
@@ -291,56 +309,62 @@ Module SpaceFleet
 
     End Sub
 
+    Private Function SelectDestinationOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity), SelectedShip As MobileEntity, AllShips As List(Of MobileEntity)) As SelectionModel
 
-    Private Function SelectAnythingOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As IConsoleEntity
-
-        Dim SelectAnything As Type = GetType(IConsoleEntity)
+        Dim Selection = New SelectionModel()
 
         If EntityMapping.Count > 0 Then
 
-            Dim Selection = GetNumber("Enter [number] or press return to cancel: ")
+            Dim Prompt As String = String.Format("[Return] Cancel{0}Enter destination [number]: ", Environment.NewLine)
 
-            If Selection.Cancelled Then
-                Return Nothing
+            'First, offer disband option for fleet (if selected)
+            If TypeOf SelectedShip Is Fleet Then
+                Prompt = String.Format("[D] Disband fleet{0}", Environment.NewLine) + Prompt
             End If
 
             Do Until EntityMapping.ContainsKey(Selection.Number)
-                Selection = GetNumber("No such thing. Enter [number] from above or press return: ")
+
+                Selection = GetNumber(Prompt, "D")
 
                 If Selection.Cancelled Then
-                    Return Nothing
+                    Selection.Entity = Nothing
+                    Return Selection
+
+                ElseIf Selection.HasCommand Then
+                    Return Selection
                 End If
+
             Loop
 
-            Return EntityMapping(Selection.Number)
+            Selection.Entity = EntityMapping(Selection.Number)
+            Return Selection
 
         End If
 
         Console.WriteLine("Nothing to select")
-        Return Nothing
+        Selection.Entity = Nothing
+        Return Selection
 
     End Function
 
-    Private Function SelectShipOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As Ship
+    Private Function SelectShipOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As MobileEntity
 
         If EntityMapping.Count > 0 Then
 
-            Dim ShipSelection = GetNumber("Enter [ship number] or press return to cancel: ")
-
-            If ShipSelection.Cancelled Then
-                Return Nothing
-            End If
+            Dim ShipSelection = New SelectionModel()
+            Dim Prompt As String = String.Format("[Return] Cancel{0}Enter ship [number]: ", Environment.NewLine)
 
             Do Until EntityMapping.ContainsKey(ShipSelection.Number) _
-                AndAlso TypeOf EntityMapping(ShipSelection.Number) Is Ship
-                ShipSelection = GetNumber("No such ship. Enter [number] from above or press return: ")
+                AndAlso TypeOf EntityMapping(ShipSelection.Number) Is MobileEntity
+
+                ShipSelection = GetNumber(Prompt)
 
                 If ShipSelection.Cancelled Then
                     Return Nothing
                 End If
             Loop
 
-            Do Until TypeOf CType(EntityMapping(ShipSelection.Number), Ship).Owner Is Human
+            Do Until TypeOf CType(EntityMapping(ShipSelection.Number), MobileEntity).Owner Is Human
                 ShipSelection = GetNumber("That ship isn't yours; try again: ")
 
                 If ShipSelection.Cancelled Then
@@ -348,7 +372,7 @@ Module SpaceFleet
                 End If
             Loop
 
-            Return CType(EntityMapping(ShipSelection.Number), Ship)
+            Return CType(EntityMapping(ShipSelection.Number), MobileEntity)
 
         End If
 
@@ -403,7 +427,10 @@ Module SpaceFleet
     Sub PlanetRoster(Planets As List(Of Planet))
 
         Const Template As String = "{0,-16}{1,-10}{2,-9}{3,-8}{4,-6}{5,-9}"
+
+        InvertConsole()
         Console.WriteLine(Template, "Name", "Pop/Max", "Research", "Income", "Rsrcs", "Focus")
+        ResetConsole()
 
         Dim MyPlanets = Planets.Where(Function(P) (TypeOf P Is MyPlanet)).ToList()
 
@@ -425,7 +452,7 @@ Module SpaceFleet
     Sub PlanetMenu()
 
         Console.WriteLine("[M]anage")
-        Console.WriteLine("[X] Done")
+        Console.WriteLine("[Return] Done")
 
     End Sub
     Sub PlanetManagementOptions()
@@ -433,7 +460,7 @@ Module SpaceFleet
         Console.WriteLine("[B]alanced focus")
         Console.WriteLine("[R]esearch focus")
         Console.WriteLine("[P]roduction focus")
-        Console.WriteLine("[X] Cancel")
+        Console.WriteLine("[Return] Cancel")
 
     End Sub
     Function DrawPlanetList(Planets As List(Of Planet)) As Dictionary(Of Integer, IConsoleEntity)
@@ -487,7 +514,7 @@ Module SpaceFleet
         Console.WriteLine("[L]ocation for newly built ships")
         Console.WriteLine("[P]urchase current ship instantly")
         Console.WriteLine("[D]esign ships")
-        Console.WriteLine("[X] Done")
+        Console.WriteLine("[Return] Done")
 
     End Sub
     Sub ShipRoster(You As Human)
@@ -496,11 +523,12 @@ Module SpaceFleet
         Console.WriteLine("Ships are produced on " & You.ConstructionPlanet.Name)
         Console.WriteLine()
 
-        Console.WriteLine("-------- FLEET -------- ")
         'Console.WriteLine("[Laser/Driver/Missiles]")
-        Console.WriteLine()
 
+        InvertConsole()
         ShipColumnHeaders()
+        ResetConsole()
+
         For Each Item As Ship In You.Ships
             Item.Info()
         Next
@@ -594,7 +622,7 @@ Module SpaceFleet
     Sub ResearchMenu()
 
         Console.WriteLine("[C]hange research item")
-        Console.WriteLine("[X] Done")
+        Console.WriteLine("[Return] Done")
 
     End Sub
 
@@ -657,7 +685,7 @@ Module SpaceFleet
         Console.ReadLine()
     End Sub
 
-    Private Sub WeeklyReport(Week As Integer, You As Player, PopulationChange As Decimal, Totals As SystemTotals, ShipJustBuilt As Boolean)
+    Private Sub WeeklyReport(Week As Integer, You As Player, PopulationChange As Decimal, Totals As SystemTotals, ShipJustBuilt As Boolean, Messages As List(Of String))
 
         Dim Technology = You.Technologies(You.Researching)
 
@@ -679,20 +707,31 @@ Module SpaceFleet
             Console.WriteLine("As we completed construction of '{0}'!", You.CurrentlyBuilding.Name)
         End If
 
+        If Messages.Count > 0 Then
+            Console.WriteLine()
+            For Each M In Messages
+                Console.WriteLine(M)
+            Next
+        End If
+
         PressReturn()
 
     End Sub
 
-    Public Function GetNumber(Question As String) As NumberModel
+    Public Function GetNumber(Question As String) As SelectionModel
+        Return GetNumber(Question, "")
+    End Function
 
-        Console.Write("  {0}", Question)
+    Public Function GetNumber(Question As String, SpecialString As String) As SelectionModel
+
+        Console.Write("{0}", Question)
         Dim InputString = Console.ReadLine
 
-        Dim InputModel As New NumberModel(0, False)
+        Dim InputModel As New SelectionModel(0, False)
         Dim InputNumber As Integer = 0
         Dim Valid As Boolean = False
 
-        Do Until Valid Or InputModel.Cancelled
+        Do Until Valid OrElse InputModel.Cancelled OrElse InputModel.HasCommand
 
             Valid = Int32.TryParse(InputString, InputNumber)
 
@@ -702,10 +741,22 @@ Module SpaceFleet
 
             Else
 
+                'Check status of non-numeric
+
                 If InputString = String.Empty Then
+                    'No input - cancel
                     InputModel.Cancel()
+
+                ElseIf InputString.ToUpper() = SpecialString.ToUpper() Then
+                    'Matching a special command
+                    InputModel.Command = InputString.ToUpper()
+
                 Else
-                    Console.Write("Invalid number, try again: ")
+                    If InputString.Contains("[") AndAlso InputString.Contains("]") Then
+                        Console.Write("Don't include the brackets ;) Enter the number: ")
+                    Else
+                        Console.Write("Invalid number, try again: ")
+                    End If
                     InputString = Console.ReadLine
                 End If
 
@@ -785,46 +836,70 @@ Module SpaceFleet
 
     End Sub
 
-    Private Sub MoveAllShips(AllShips As List(Of MobileEntity), You As Human, Enemies As List(Of Enemy), Planets As List(Of Planet), Messages As List(Of CommsMessage))
+    Private Sub ProcessMovement(AllShips As List(Of MobileEntity), You As Human, Enemies As List(Of Enemy), Planets As List(Of Planet), Messages As List(Of CommsMessage))
 
-        'Move all moving ships
-        For Each S As Ship In AllShips
+        For Each S As MobileEntity In AllShips
+            S.Moved = False
+        Next
 
-            'Handle movement
-            ' if battle is detected, 'Engaged' flag is set and involved ships come to stop
-            S.Move(AllShips)
+        Dim UnmovedShips = AllShips.Where(Function(x) (Not x.Moved))
 
-            If TypeOf S.Owner Is Human Then
-                'Forgive us our O(n^2) as we forgive those...
-                For Each E As Enemy In Enemies
+        Do While UnmovedShips.Count > 0
 
-                    If E.HasInTerritory(S) Then
+            'Move all moving ships
+            For Each S As MobileEntity In UnmovedShips
 
-                        E.Meet()
+                'Handle movement
+                ' if battle is detected, 'Engaged' flag is set and involved ships come to stop
+                ' Moved flag is set to true for ship S
+                Dim CollectionStatus = S.Move(AllShips)
 
-                        'Check if first contact
-                        If E.Meetings = 1 Then
-                            Messages.Add(New CommsMessage(E.Race, CommsMessage.CommsKind.Introduction))
+                If TypeOf S.Owner Is Human Then
+                    'Forgive us our O(n^2) as we forgive those...
+                    For Each E As Enemy In Enemies
+
+                        If E.HasInTerritory(S) Then
+
+                            E.Meet()
+
+                            'Check if first contact
+                            If E.Meetings = 1 Then
+                                Messages.Add(New CommsMessage(E.Race, CommsMessage.CommsKind.Introduction))
+                            End If
+
                         End If
 
-                    End If
-
-                Next
-            End If
-
-            'If we have "arrived"
-            If Not S.Moving Then
-
-                Dim PlanetsHere = Planets.Where(Function(p) (p.Location = S.Location AndAlso p.ClaimableBy(You)))
-                If PlanetsHere.Count > 0 Then
-                    Dim PlanetToLand As Planet = PlanetsHere.FirstOrDefault()
-                    Dim Landing As New PlanetLanding(PlanetToLand, S)
-                    Landing.Land()
+                    Next
                 End If
 
-            End If
+                'If we have "arrived"
+                If Not S.Moving Then
 
-        Next
+                    Dim PlanetsHere = Planets.Where(Function(p) (p.Location = S.Location AndAlso p.ClaimableBy(You)))
+                    If PlanetsHere.Count > 0 Then
+                        Dim PlanetToLand As Planet = PlanetsHere.FirstOrDefault()
+                        Dim Landing As New PlanetLanding(PlanetToLand, S)
+                        Landing.Land()
+                    End If
+
+                End If
+
+                'Collection modified, drop into Do Loop
+                If CollectionStatus = MobileEntity.CollectionChangeStatus.Changed Then
+                    Exit For
+                End If
+
+            Next
+
+            UnmovedShips = AllShips.Where(Function(x) (Not x.Moved))
+
+        Loop
+
+    End Sub
+
+    Private Sub ProcessCombat(AllShips As List(Of MobileEntity))
+
+        'Now process all combat
 
         Dim Combatants = AllShips.Where(Function(x) (x.Engaged))
 

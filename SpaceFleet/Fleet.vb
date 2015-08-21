@@ -33,29 +33,94 @@
 
         AssembleFleet(Owner, Location, AllShips)
 
+        SpaceFleet.ReportMessages.Add(String.Format("Fleet {0} formed ({1} ships)", MyName, Me.Ships.Count))
+
     End Sub
 
     Public Sub AssembleFleet(Owner As Player, Location As Integer, AllShips As List(Of MobileEntity))
 
         Debug.WriteLine("Fleet assembling for " & Owner.Name & " at " & Location)
 
-        Ships = New List(Of Ship)
+        Me.Location = Location
+        Me.Destination = Location
 
-        'Get allied ships stopped on this spot
-        Dim CandidateShips = AllShips.Where(Function(s) (s.Location = Location AndAlso _
+        Ships = New List(Of Ship)
+        Dim Entities As New List(Of MobileEntity)
+
+        'Get allied stuff stopped on this spot
+        Dim CandidateEntities = AllShips.Where(Function(s) (s.Location = Location AndAlso _
                                             Not s.Moving AndAlso _
                                             s.Owner.Equals(Owner)))
 
         'Join and associate the ships to the fleet
-        For Each S As Ship In CandidateShips
-            S.JoinFleet(Me)
+        For Each S In CandidateEntities.Where(Function(x) (TypeOf x Is Ship))
+            DirectCast(S, Ship).JoinFleet(Me)
         Next
 
+        'Now get the fleets
+        Dim FleetsToProcess = CandidateEntities.Where(Function(x) (TypeOf x Is Fleet)).ToList()
+
+        'Break up any other fleets on this spot
+        ' and move the ships into this fleet (all done in Fleet.MergeInto())
+        ' WARN This is a bad pattern to use here I think
+        ' because we exit the ForEach loop EVERY TIME
+        Do While FleetsToProcess.Count > 0
+
+            For Each F In FleetsToProcess
+                DirectCast(F, Fleet).MergeInto(Me, AllShips)
+
+                'Don't process this fleet again
+                FleetsToProcess.Remove(F)
+                Exit For
+            Next
+
+            FleetsToProcess = CandidateEntities.Where(Function(x) (TypeOf x Is Fleet)).ToList()
+
+        Loop
+
         'Remove the ships from ship register
-        AllShips.RemoveAll(Function(s) (CandidateShips.Contains(s)))
+        AllShips.RemoveAll(Function(s) (CandidateEntities.Contains(s)))
 
         'Add the fleet to ship register
         AllShips.Add(Me)
+
+    End Sub
+
+    Public Sub MergeInto(Fleet As Fleet, AllShips As List(Of MobileEntity))
+
+        Debug.WriteLine("Fleet " + Me.Name + " merging into " + Fleet.Name)
+
+        'Get every ship to leave the fleet
+        For Each S As Ship In Me.Ships
+            S.LeaveFleet(AllShips)
+            S.JoinFleet(Fleet)
+        Next
+
+        'Remove the fleet from the register
+        AllShips.Remove(Me)
+
+        SpaceFleet.ReportMessages.Add(String.Format("Fleet {0} merged into {1} (now {2} ships)", _
+                                                    Me.Name, Fleet.Name, Fleet.Ships.Count))
+
+    End Sub
+
+    Public Sub DisbandFleet(AllShips As List(Of MobileEntity))
+
+        Debug.WriteLine("Fleet disbanding at " & Location)
+
+        Do While Me.Ships.Count > 0
+
+            'Get every ship to leave the fleet
+            For Each S As Ship In Me.Ships
+                S.LeaveFleet(AllShips)
+                'WARN bad pattern again
+                Exit For
+            Next
+
+        Loop
+
+        'Remove this fleet from the register
+        AllShips.Remove(Me)
 
     End Sub
 

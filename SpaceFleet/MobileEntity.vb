@@ -20,6 +20,9 @@
     Public Destination As Integer
     Public Engaged As Boolean
 
+    'Has this entity's movement been processed this turn?
+    Public Moved As Boolean
+
     Private OldLocation As Integer
 
     Private MyLocation As Integer
@@ -116,23 +119,26 @@
 
     End Function
 
-    Public Function IsEnemy(S As Ship) As Boolean
+    Public Function IsEnemy(S As MobileEntity) As Boolean
 
         Return S.Owner.GetType().Name <> Me.Owner.GetType().Name
 
     End Function
 
-    Public Function IsTeammate(S As Ship) As Boolean
+    Public Function IsTeammate(S As MobileEntity) As Boolean
 
         Return S.Owner.Equals(Me.Owner)
 
     End Function
 
-    Public Sub Move(AllShips As List(Of MobileEntity))
+    Public Function Move(AllShips As List(Of MobileEntity)) As CollectionChangeStatus
+
+        'Whether or not we actually move, don't process this ship again
+        Me.Moved = True
 
         'Can't move if in battle
         If Engaged Then
-            Return
+            Return CollectionChangeStatus.None
         End If
 
         OldLocation = Location
@@ -165,16 +171,19 @@
         'Check ship interactions - did we pass another ship? Shall we fleet/battle?
         'There will be unprocessed ships if the AllShips collection had to change
         ' i.e. if there was a battle or fleet change
-        ProcessAllInteractions(AllShips, AllShips)
+        Dim ChangeStatus = ProcessAllInteractions(AllShips, AllShips)
+        Return ChangeStatus
 
-    End Sub
+    End Function
 
     ''' <summary>
     ''' Recursive function to process interactions with some subset of ships
     ''' </summary>
     ''' <param name="SomeShips">Ships to potentially interact with</param>
     ''' <param name="AllShips">All ships in the universe</param>
-    Private Sub ProcessAllInteractions(SomeShips As List(Of MobileEntity), AllShips As List(Of MobileEntity))
+    Private Function ProcessAllInteractions(SomeShips As List(Of MobileEntity), AllShips As List(Of MobileEntity)) As CollectionChangeStatus
+
+        Dim ChangeStatus As CollectionChangeStatus = CollectionChangeStatus.None
 
         'Clone AllShips into UnprocessedShips, but remove them
         ' when they are later processed
@@ -189,6 +198,7 @@
                 Case ForLoopTransition.ContinueFor
                     Continue For
                 Case ForLoopTransition.ExitFor
+                    ChangeStatus = CollectionChangeStatus.Changed
                     Exit For
             End Select
         Next
@@ -201,7 +211,9 @@
             ProcessAllInteractions(UnprocessedShips, AllShips)
         End If
 
-    End Sub
+        Return ChangeStatus
+
+    End Function
 
     Private Function ProcessEntityInteractions(E As MobileEntity, AllShips As List(Of MobileEntity)) As ForLoopTransition
 
@@ -228,7 +240,9 @@
                 'They're allies - fleet up
                 'Does fleet already exist?
                 If TypeOf E Is Fleet Then
-                    DirectCast(E, Fleet).AssembleFleet(E.Owner, E.Location, AllShips)
+                    'Join existing fleet
+                    DirectCast(Me, Ship).JoinFleet(E)
+                    'DirectCast(E, Fleet).AssembleFleet(E.Owner, E.Location, AllShips)
 
                 ElseIf TypeOf Me Is Fleet Then
                     DirectCast(Me, Fleet).AssembleFleet(Me.Owner, Me.Location, AllShips)
@@ -250,6 +264,11 @@
         NextFor
         ContinueFor
         ExitFor
+    End Enum
+
+    Public Enum CollectionChangeStatus
+        None
+        Changed
     End Enum
 
 End Class

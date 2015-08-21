@@ -92,7 +92,7 @@
     <Compile Include="Map.vb" />
     <Compile Include="MobileEntity.vb" />
     <Compile Include="MyPlanet.vb" />
-    <Compile Include="NumberModel.vb" />
+    <Compile Include="SelectionModel.vb" />
     <Compile Include="Planet.vb" />
     <Compile Include="PlanetGeneration.vb" />
     <Compile Include="IPlayer.vb" />

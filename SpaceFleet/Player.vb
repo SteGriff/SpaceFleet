@@ -62,7 +62,7 @@
         End Get
     End Property
 
-    Public Function HasInTerritory(S As Ship) As Boolean
+    Public Function HasInTerritory(S As MobileEntity) As Boolean
 
         Return TerritoryBegin <= S.Location AndAlso S.Location <= TerritoryEnd
 

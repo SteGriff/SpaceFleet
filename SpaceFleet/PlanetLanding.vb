@@ -2,13 +2,13 @@
 
     Dim Planet As Planet
 
-    Dim Ship As Ship
+    Dim Lander As MobileEntity
 
-    Public Sub New(Planet As Planet, Ship As Ship)
+    Public Sub New(Planet As Planet, Lander As MobileEntity)
         Me.Planet = Planet
 
-        'N.b. Attacking player can be obtained with Ship.Owner
-        Me.Ship = Ship
+        'N.b. Attacking player can be obtained with Lander.Owner
+        Me.Lander = Lander
 
     End Sub
 
@@ -26,7 +26,7 @@
         End If
 
         If Succeeded Then
-            Planet.Claim(Ship.Owner)
+            Planet.Claim(Lander.Owner)
         End If
 
     End Sub
@@ -79,7 +79,7 @@
         Console.WriteLine("  Unit attempting foreign planet landing")
         ResetConsole()
 
-        Dim PlayerTeam As New List(Of Ship)({Ship})
+        Dim PlayerTeam As New List(Of Ship)({Lander})
         TabbedTeamList(PlayerTeam, "Allied units")
 
         Console.WriteLine()

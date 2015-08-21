@@ -21,7 +21,7 @@
         Console.WriteLine()
         Console.WriteLine("{0}:", TeamLabel.ToUpper())
 
-        For Each S As Ship In Team
+        For Each S In Team
             Console.Write("  ")
 
             'Name in colour

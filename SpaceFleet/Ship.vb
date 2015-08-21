@@ -183,12 +183,17 @@
 
     Public Sub LeaveFleet(AllShips As List(Of MobileEntity))
 
-        'Remove self from fleet and unset my fleet pointer
-        Me.Fleet.Ships.Remove(Me)
-        Me.Fleet = Nothing
+        'Leave fleet if possible
+        If Not Me.Fleet Is Nothing Then
 
-        'Add self to universal ship register
-        AllShips.Add(Me)
+            'Remove self from fleet and unset my fleet pointer
+            Me.Fleet.Ships.Remove(Me)
+            Me.Fleet = Nothing
+
+            'Add self to universal ship register
+            AllShips.Add(Me)
+
+        End If
 
     End Sub
 End Class

@@ -4,6 +4,8 @@ Notes on little touches to implement, and ideas for how to do some of the big fe
 
 ## Bugs
 
+ * Fleet of a single ship forming when disbanded fleet members move away
+ 
 ## Planet capture
 
 When a ship stops moving and its target is a non-friendly planet, begin planet capture
