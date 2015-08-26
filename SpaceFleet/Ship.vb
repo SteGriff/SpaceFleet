@@ -26,6 +26,12 @@
         End Get
     End Property
 
+    Public Overrides ReadOnly Property ShipContent As List(Of Ship)
+        Get
+            Return New List(Of Ship)({Me})
+        End Get
+    End Property
+
     Sub New()
         MyBase.New()
         Me.DesignName = ""
@@ -164,10 +170,11 @@
 
     End Sub
 
-    Public Sub Die(AllShips As List(Of MobileEntity))
+    Public Sub Die(AllShips As List(Of MobileEntity), Combatants As List(Of Ship))
 
         LeaveFleet(AllShips)
         AllShips.Remove(Me)
+        Combatants.Remove(Me)
 
     End Sub
 

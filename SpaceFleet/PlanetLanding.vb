@@ -79,7 +79,7 @@
         Console.WriteLine("  Unit attempting foreign planet landing")
         ResetConsole()
 
-        Dim PlayerTeam As New List(Of Ship)({Lander})
+        Dim PlayerTeam = Lander.ShipContent
         TabbedTeamList(PlayerTeam, "Allied units")
 
         Console.WriteLine()

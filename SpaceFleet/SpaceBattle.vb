@@ -1,5 +1,11 @@
 ﻿Public Class SpaceBattle
 
+    Private Enum BattleResult
+        Win
+        Loss
+        Draw
+    End Enum
+
     Dim Age As Integer
     Dim Location As Integer
 
@@ -50,24 +56,24 @@
 
     End Sub
 
+    Public Function AllDead(Team As List(Of Ship))
+
+        Return Team.All(Function(s) (s.NoHealth))
+
+    End Function
+
     Public Sub Fight(ByRef AllShips As List(Of MobileEntity))
 
         'All things on this spot, with engaged flag set
-        Dim PotentialCombatants = AllShips.Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location))
-        Dim Combatants As New List(Of Ship)
-
-        'Ehhh this could be done with LINQ
-        For Each E As MobileEntity In PotentialCombatants
-            If TypeOf E Is Ship Then
-                Combatants.Add(E)
-            Else
-                Dim FleetShips = DirectCast(E, Fleet).Ships
-                Combatants.AddRange(FleetShips)
-            End If
-        Next
+        Dim Combatants = AllShips _
+                                  .Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location)) _
+                                  .SelectMany(Function(sh) (sh.ShipContent)) _
+                                  .ToList()
 
         Dim PlayerTeam As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
         Dim Hostiles As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()
+
+        'Dim Victory As BattleResult = BattleResult.Draw
 
         'Display intro and wait for key press
         Intro(PlayerTeam, Hostiles)
@@ -89,11 +95,11 @@
 
                 'Remove anyone dead from global ship register
                 If S.NoHealth Then
-                    S.Die(AllShips)
+                    S.Die(AllShips, Combatants)
                 End If
 
                 If Target.NoHealth Then
-                    Target.Die(AllShips)
+                    Target.Die(AllShips, Combatants)
                 End If
 
                 Console.WriteLine()
@@ -108,7 +114,7 @@
         Loop Until PlayerTeam.Count = 0 OrElse Hostiles.Count = 0
 
         AnnounceResult(PlayerTeam, Hostiles)
-        CleanUp(Combatants)
+        Disengage(Combatants)
 
         Console.ReadLine()
 
@@ -136,7 +142,7 @@
 
     End Sub
 
-    Private Sub CleanUp(ByRef Ships As IEnumerable(Of Ship))
+    Private Sub Disengage(ByRef Ships As IEnumerable(Of Ship))
 
         For Each S As Ship In Ships
             S.Engaged = False

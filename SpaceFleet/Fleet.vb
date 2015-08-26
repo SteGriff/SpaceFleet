@@ -16,6 +16,12 @@
         End Get
     End Property
 
+    Public Overrides ReadOnly Property ShipContent As List(Of Ship)
+        Get
+            Return Me.Ships
+        End Get
+    End Property
+
     'Warp of the fleet = warp of the slowest ship
     Public Overrides ReadOnly Property Warp As Integer
         Get

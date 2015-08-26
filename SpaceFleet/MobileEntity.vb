@@ -1,4 +1,4 @@
-﻿Public Class MobileEntity
+﻿Public MustInherit Class MobileEntity
     Implements IConsoleEntity, IColourful
 
     Overridable ReadOnly Property Art As String
@@ -12,6 +12,8 @@
             Return 0
         End Get
     End Property
+
+    MustOverride ReadOnly Property ShipContent As List(Of Ship)
 
     Protected FleetNumber As Integer
 
