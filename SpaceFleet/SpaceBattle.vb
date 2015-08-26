@@ -95,11 +95,11 @@
 
                 'Remove anyone dead from global ship register
                 If S.NoHealth Then
-                    S.Die(AllShips, Combatants)
+                    KillShip(S, AllShips, Combatants)
                 End If
 
                 If Target.NoHealth Then
-                    Target.Die(AllShips, Combatants)
+                    KillShip(S, AllShips, Combatants)
                 End If
 
                 Console.WriteLine()
@@ -118,6 +118,11 @@
 
         Console.ReadLine()
 
+    End Sub
+
+    Private Sub KillShip(S As Ship, AllShips As List(Of MobileEntity), Combatants As List(Of Ship))
+        S.Die(AllShips)
+        Combatants.Remove(S)
     End Sub
 
     Private Sub AnnounceResult(PlayerTeam As IEnumerable(Of Ship), Hostiles As IEnumerable(Of Ship))

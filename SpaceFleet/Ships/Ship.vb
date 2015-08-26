@@ -170,11 +170,10 @@
 
     End Sub
 
-    Public Sub Die(AllShips As List(Of MobileEntity), Combatants As List(Of Ship))
+    Public Sub Die(AllShips As List(Of MobileEntity))
 
         LeaveFleet(AllShips)
         AllShips.Remove(Me)
-        Combatants.Remove(Me)
 
     End Sub
 

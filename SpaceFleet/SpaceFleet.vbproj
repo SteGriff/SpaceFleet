@@ -83,25 +83,25 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommsMessage.vb" />
-    <Compile Include="Enemy.vb" />
+    <Compile Include="Players\Enemy.vb" />
     <Compile Include="Extensions.vb" />
-    <Compile Include="Fleet.vb" />
-    <Compile Include="Human.vb" />
-    <Compile Include="IColourful.vb" />
-    <Compile Include="IConsoleEntity.vb" />
+    <Compile Include="Ships\Fleet.vb" />
+    <Compile Include="Players\Human.vb" />
+    <Compile Include="Interfaces\IColourful.vb" />
+    <Compile Include="Interfaces\IConsoleEntity.vb" />
     <Compile Include="Map.vb" />
-    <Compile Include="MobileEntity.vb" />
-    <Compile Include="MyPlanet.vb" />
+    <Compile Include="Ships\MobileEntity.vb" />
+    <Compile Include="Space\MyPlanet.vb" />
     <Compile Include="SelectionModel.vb" />
-    <Compile Include="Planet.vb" />
-    <Compile Include="PlanetGeneration.vb" />
-    <Compile Include="IPlayer.vb" />
-    <Compile Include="PlanetLanding.vb" />
-    <Compile Include="Player.vb" />
+    <Compile Include="Space\Planet.vb" />
+    <Compile Include="Space\PlanetGeneration.vb" />
+    <Compile Include="Players\IPlayer.vb" />
+    <Compile Include="Space\PlanetLanding.vb" />
+    <Compile Include="Players\Player.vb" />
     <Compile Include="ProductionFocus.vb" />
-    <Compile Include="Race.vb" />
-    <Compile Include="EnemyGeneration.vb" />
-    <Compile Include="Ship.vb" />
+    <Compile Include="Players\Race.vb" />
+    <Compile Include="Players\EnemyGeneration.vb" />
+    <Compile Include="Ships\Ship.vb" />
     <Compile Include="SpaceBattle.vb" />
     <Compile Include="SpaceFleet.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -119,7 +119,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Star.vb" />
+    <Compile Include="Space\Star.vb" />
     <Compile Include="Technology.vb" />
     <Compile Include="TechnologyType.vb" />
     <Compile Include="Totals.vb" />
@@ -156,6 +156,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
