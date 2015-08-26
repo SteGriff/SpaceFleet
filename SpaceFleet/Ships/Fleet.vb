@@ -39,7 +39,7 @@
 
         AssembleFleet(Owner, Location, AllShips)
 
-        SpaceFleet.ReportMessages.Add(String.Format("Fleet {0} formed ({1} ships)", MyName, Me.Ships.Count))
+        SpaceFleet.ReportMessages.Add(String.Format("Formed: {0} ({1} ships)", MyName, Me.Ships.Count))
 
     End Sub
 
@@ -92,15 +92,23 @@
 
     End Sub
 
-    Public Sub MergeInto(Fleet As Fleet, AllShips As List(Of MobileEntity))
+    Public Sub MergeInto(ByRef Fleet As Fleet, AllShips As List(Of MobileEntity))
 
         Debug.WriteLine("Fleet " + Me.Name + " merging into " + Fleet.Name)
 
-        'Get every ship to leave the fleet
-        For Each S As Ship In Me.Ships
-            S.LeaveFleet(AllShips)
-            S.JoinFleet(Fleet)
-        Next
+        'Get every ship to leave the fleet and join the other
+        'TODO check if this works
+        Dim SE = Me.Ships.GetEnumerator()
+        Do While SE.MoveNext()
+            SE.Current.LeaveFleet(AllShips)
+            SE.Current.JoinFleet(Fleet)
+            SE = Me.Ships.GetEnumerator()
+        Loop
+
+        'For Each S As Ship In Me.Ships
+        '    S.LeaveFleet(AllShips)
+        '    S.JoinFleet(Fleet)
+        'Next
 
         'Remove the fleet from the register
         AllShips.Remove(Me)

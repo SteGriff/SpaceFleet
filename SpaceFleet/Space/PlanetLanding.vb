@@ -1,29 +1,16 @@
 ﻿Public Class PlanetLanding
 
-    Dim Planet As Planet
-
-    Dim Lander As MobileEntity
-
-    Public Sub New(Planet As Planet, Lander As MobileEntity)
-        Me.Planet = Planet
-
-        'N.b. Attacking player can be obtained with Lander.Owner
-        Me.Lander = Lander
+    Public Sub New()
 
     End Sub
 
-    Public Sub Land()
+    Public Sub Land(ByRef Planet As Planet, ByRef Lander As MobileEntity)
 
-        Intro()
+        'N.b. Attacking player can be obtained with Lander.Owner
 
-        Dim Succeeded As Boolean = False
+        Intro(Lander)
 
-        If Planet.Population = 0 Then
-            Succeeded = Conquer(True)
-        Else
-            'TODO Conquest
-            Succeeded = Conquer(False)
-        End If
+        Dim Succeeded As Boolean = Conquer(Planet)
 
         If Succeeded Then
             Planet.Claim(Lander.Owner)
@@ -31,7 +18,9 @@
 
     End Sub
 
-    Private Function Conquer(Uninhabited As Boolean) As Boolean
+    Private Function Conquer(ByRef Planet As Planet) As Boolean
+
+        Dim Uninhabited As Boolean = (Planet.Population = 0)
 
         Console.Clear()
         Console.WriteLine()
@@ -57,13 +46,15 @@
             Console.WriteLine(", was overthrown!")
         End If
 
-        ResetConsole()
+        'ResetConsole()
+
+        PressReturnToClear()
 
         Return True
 
     End Function
 
-    Private Sub Intro()
+    Private Sub Intro(Lander As MobileEntity)
 
         Console.Clear()
         Console.WriteLine()
@@ -82,12 +73,14 @@
         Dim PlayerTeam = Lander.ShipContent
         TabbedTeamList(PlayerTeam, "Allied units")
 
+        PressReturnToClear()
+
+    End Sub
+
+    Private Sub PressReturnToClear()
         Console.WriteLine()
         Console.WriteLine("Press return")
         Console.ReadLine()
         Console.Clear()
-
     End Sub
-
-
 End Class

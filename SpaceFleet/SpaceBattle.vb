@@ -70,8 +70,8 @@
                                   .SelectMany(Function(sh) (sh.ShipContent)) _
                                   .ToList()
 
-        Dim PlayerTeam As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
-        Dim Hostiles As List(Of Ship) = Combatants.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()
+        Dim PlayerTeam As List(Of Ship) = Combatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
+        Dim Hostiles As List(Of Ship) = Combatants.Where(Function(s) (s.Owner.Team = Team.Enemy)).ToList()
 
         'Dim Victory As BattleResult = BattleResult.Draw
 
@@ -108,8 +108,8 @@
 
             Next
 
-            PlayerTeam = Combatants.Where(Function(s) (TypeOf s.Owner Is Human)).ToList()
-            Hostiles = Combatants.Where(Function(s) (TypeOf s.Owner Is Enemy)).ToList()
+            PlayerTeam = Combatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
+            Hostiles = Combatants.Where(Function(s) (s.Owner.Team = Team.Enemy)).ToList()
 
         Loop Until PlayerTeam.Count = 0 OrElse Hostiles.Count = 0
 
@@ -157,7 +157,7 @@
 
     Public Function EnemiesOf(ThisShip As Ship, Ships As IEnumerable(Of Ship)) As IEnumerable(Of Ship)
 
-        Return Ships.Where(Function(AShip) (AShip.Owner.Race.Name <> ThisShip.Owner.Race.Name))
+        Return Ships.Where(Function(AShip) (AShip.Owner.Team <> ThisShip.Owner.Team))
 
     End Function
 

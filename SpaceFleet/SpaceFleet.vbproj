@@ -120,6 +120,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="Space\Star.vb" />
+    <Compile Include="TeamNumber.vb" />
     <Compile Include="Technology.vb" />
     <Compile Include="TechnologyType.vb" />
     <Compile Include="Totals.vb" />

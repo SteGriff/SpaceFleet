@@ -14,7 +14,7 @@
     End Property
 
     Public Sub New(R As Race, S As Star, UniversalShips As List(Of MobileEntity), InitialPlanets As List(Of Planet), Randomiser As Random)
-        MyBase.New(R, S, InitialPlanets, UniversalShips)
+        MyBase.New(1, R, S, InitialPlanets, UniversalShips)
 
         'Ability (difficulty) 1 to 10; 10 is most able
         Me.Ability = Randomiser.Next(1, 11)

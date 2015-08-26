@@ -30,3 +30,12 @@ The science and measurements of this game are completely fictional and non-scien
 ## Combat
 
 Units which pass each other during their move step and are enemies will enter a space battle. Any allied units on the same spot will be involved. 
+
+## Teams
+
+The game is considered to be played in two teams; Human and Enemies (Computer). Teams are stored as an `Integer`.
+	
+	Human : 0
+	Enemies : 1
+	
+This means that enemies don't bother each other, just the human player. We can build this out in future.

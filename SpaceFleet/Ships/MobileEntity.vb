@@ -123,13 +123,13 @@
 
     Public Function IsEnemy(S As MobileEntity) As Boolean
 
-        Return S.Owner.GetType().Name <> Me.Owner.GetType().Name
+        Return S.Owner.Team <> Me.Owner.Team
 
     End Function
 
     Public Function IsTeammate(S As MobileEntity) As Boolean
 
-        Return S.Owner.Equals(Me.Owner)
+        Return S.Owner.Team = Me.Owner.Team
 
     End Function
 
@@ -249,7 +249,7 @@
                 ElseIf TypeOf Me Is Fleet Then
                     DirectCast(Me, Fleet).AssembleFleet(Me.Owner, Me.Location, AllShips)
 
-                Else
+                ElseIf TypeOf Me Is Ship And DirectCast(Me, Ship).Fleet Is Nothing Then
                     'No existing fleet, so form one
                     Dim F As New Fleet(Me.Owner, Me.Location, AllShips)
                     Return ForLoopTransition.ExitFor

@@ -2,6 +2,7 @@
     Implements IPlayer
 
     Public Race As Race
+    Public Team As Integer
 
     Public Money As Integer = 1000
 
@@ -68,7 +69,7 @@
 
     End Function
 
-    Public Sub New(R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of MobileEntity))
+    Public Sub New(Team As Integer, R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of MobileEntity))
 
         Me.Race = R
 

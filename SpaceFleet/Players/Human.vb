@@ -3,7 +3,7 @@
 
     Public Sub New(R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of MobileEntity))
 
-        MyBase.New(R, HomeStar, InitialPlanets, UniversalShips)
+        MyBase.New(0, R, HomeStar, InitialPlanets, UniversalShips)
 
     End Sub
 
