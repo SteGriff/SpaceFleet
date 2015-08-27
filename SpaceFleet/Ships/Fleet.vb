@@ -29,12 +29,14 @@
         End Get
     End Property
 
-    Public Sub New(Owner As Player, Location As Integer, AllShips As List(Of MobileEntity))
+    Public Sub New(ByRef Owner As Player, Location As Integer, AllShips As List(Of MobileEntity))
 
         MyBase.New()
 
         Me.Owner = Owner
         FleetNumber = Me.Owner.TopFleetNumber + 1
+        Owner.TopFleetNumber += 1
+
         MyName = String.Format("{0} fleet {1}", Owner.Race.Name, FleetNumber)
 
         AssembleFleet(Owner, Location, AllShips)
@@ -68,19 +70,18 @@
 
         'Break up any other fleets on this spot
         ' and move the ships into this fleet (all done in Fleet.MergeInto())
-        ' WARN This is a bad pattern to use here I think
-        ' because we exit the ForEach loop EVERY TIME
         Do While FleetsToProcess.Count > 0
 
-            For Each F In FleetsToProcess
-                DirectCast(F, Fleet).MergeInto(Me, AllShips)
+            'Get next fleet
+            Dim FE = FleetsToProcess.GetEnumerator()
+            FE.MoveNext()
+            Dim F = FE.Current
 
-                'Don't process this fleet again
-                FleetsToProcess.Remove(F)
-                Exit For
-            Next
+            'Merge it
+            DirectCast(F, Fleet).MergeInto(Me, AllShips)
 
-            FleetsToProcess = CandidateEntities.Where(Function(x) (TypeOf x Is Fleet)).ToList()
+            'Don't process this fleet again
+            FleetsToProcess.Remove(F)
 
         Loop
 
@@ -96,19 +97,19 @@
 
         Debug.WriteLine("Fleet " + Me.Name + " merging into " + Fleet.Name)
 
+        'Don't merge into self - it never ends!
+        If Fleet.Name = Me.Name Then
+            Debug.WriteLine("  Aborted because fleets are same")
+            Return
+        End If
+
         'Get every ship to leave the fleet and join the other
-        'TODO check if this works
-        Dim SE = Me.Ships.GetEnumerator()
-        Do While SE.MoveNext()
+        Do While Me.Ships.Count > 0
+            Dim SE = Me.Ships.GetEnumerator()
+            SE.MoveNext
             SE.Current.LeaveFleet(AllShips)
             SE.Current.JoinFleet(Fleet)
-            SE = Me.Ships.GetEnumerator()
         Loop
-
-        'For Each S As Ship In Me.Ships
-        '    S.LeaveFleet(AllShips)
-        '    S.JoinFleet(Fleet)
-        'Next
 
         'Remove the fleet from the register
         AllShips.Remove(Me)

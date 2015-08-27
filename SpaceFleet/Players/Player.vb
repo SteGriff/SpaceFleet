@@ -71,6 +71,7 @@
 
     Public Sub New(Team As Integer, R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of MobileEntity))
 
+        Me.Team = Team
         Me.Race = R
 
         TerritoryBegin = HomeStar.Location

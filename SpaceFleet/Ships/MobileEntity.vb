@@ -244,10 +244,10 @@
                 If TypeOf E Is Fleet Then
                     'Join existing fleet
                     DirectCast(Me, Ship).JoinFleet(E)
-                    'DirectCast(E, Fleet).AssembleFleet(E.Owner, E.Location, AllShips)
 
                 ElseIf TypeOf Me Is Fleet Then
                     DirectCast(Me, Fleet).AssembleFleet(Me.Owner, Me.Location, AllShips)
+                    Return ForLoopTransition.ExitFor
 
                 ElseIf TypeOf Me Is Ship And DirectCast(Me, Ship).Fleet Is Nothing Then
                     'No existing fleet, so form one
