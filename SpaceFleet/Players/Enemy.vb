@@ -13,7 +13,7 @@
         End Get
     End Property
 
-    Public Sub New(R As Race, S As Star, UniversalShips As List(Of MobileEntity), InitialPlanets As List(Of Planet), Randomiser As Random)
+    Public Sub New(R As Race, S As Star, UniversalShips As List(Of ShipOrgUnit), InitialPlanets As List(Of Planet), Randomiser As Random)
         MyBase.New(1, R, S, InitialPlanets, UniversalShips)
 
         'Ability (difficulty) 1 to 10; 10 is most able
@@ -31,7 +31,7 @@
         MyMeetings += 1
     End Sub
 
-    Public Sub Turn(AllShips As List(Of MobileEntity))
+    Public Sub Turn(AllShips As List(Of ShipOrgUnit))
 
         Age += 1
 
@@ -47,13 +47,13 @@
 
         'Build ships
         If Age Mod Math.Floor(100 / Ability) = 0 Then
-            'Shortcut... build from home star for now
-            Dim NewShip = ShipDesigns(0).BuildClonedInstance(Me, AllShips)
+
+            Dim Design = ShipDesigns(0)
+            Dim NewOrg = New ShipOrgUnit(Me, Design, AllShips)
 
             'Target the player's end of the lineiverse
-            NewShip.Destination = 0
+            NewOrg.Destination = 0
 
-            Ships.Add(NewShip)
         End If
 
     End Sub

@@ -6,7 +6,7 @@
         Me.Randomiser = Randomiser
     End Sub
 
-    Public Function GenerateEnemies(Stars As List(Of Star), AllShips As List(Of MobileEntity)) As List(Of Enemy)
+    Public Function GenerateEnemies(Stars As List(Of Star), AllShips As List(Of ShipOrgUnit)) As List(Of Enemy)
 
         'TODO Allow races to spread across more than one star system initially
 

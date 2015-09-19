@@ -1,17 +1,22 @@
 ﻿Public Class Ship
-    Inherits MobileEntity
-    Implements ICloneable, IConsoleEntity, IColourful
+    Implements ICloneable, ITransponding
 
+    Public Name As String
     Public DesignName As String
     Public HP As Byte
     Public MaxHP As Byte
-    Public MyLocation As Integer
-    Public Fleet As Fleet
+    Public OrgUnit As ShipOrgUnit
 
     Public Attack As Byte()
     Public Defence As Byte()
 
     Public Const InfoTemplate As String = "{0,-24}{1,-6}{2,-12}{3,-12}{4,-8}"
+
+    Public ReadOnly Property Owner As Player
+        Get
+            Return OrgUnit.Owner
+        End Get
+    End Property
 
     Public ReadOnly Property PercentHP As Decimal
         Get
@@ -20,15 +25,9 @@
     End Property
 
     Private MyWarp As Integer
-    Public Overrides ReadOnly Property Warp As Integer
+    Public ReadOnly Property Warp As Integer
         Get
             Return MyWarp
-        End Get
-    End Property
-
-    Public Overrides ReadOnly Property ShipContent As List(Of Ship)
-        Get
-            Return New List(Of Ship)({Me})
         End Get
     End Property
 
@@ -105,19 +104,7 @@
 
     End Function
 
-    Function BuildClonedInstance(Owner As Player, AllShips As List(Of MobileEntity)) As Ship
-
-        Dim NewShip As Ship = Me.Clone()
-        NewShip.Owner = Owner
-        NewShip.Location = Owner.ConstructionPlanet.Location
-
-        AllShips.Add(NewShip)
-
-        Return NewShip
-
-    End Function
-
-    Public Overrides ReadOnly Property Art As String
+    Public ReadOnly Property Art As String
         Get
 
             Dim Images() As String = {">", "}>", "}->", "}=>", "}]=>"}
@@ -170,36 +157,24 @@
 
     End Sub
 
-    Public Sub Die(AllShips As List(Of MobileEntity))
+    Public Sub Die(AllShips As List(Of ShipOrgUnit))
 
-        LeaveFleet(AllShips)
-        AllShips.Remove(Me)
-
-    End Sub
-
-    Public Sub JoinFleet(Fleet As Fleet)
-
-        Debug.WriteLine(Me.Name + " joins fleet: " + Fleet.Name)
-
-        'Set fleet pointer
-        Me.Fleet = Fleet
-        Fleet.Ships.Add(Me)
+        OrgUnit.RemoveShip(Me, AllShips)
 
     End Sub
 
-    Public Sub LeaveFleet(AllShips As List(Of MobileEntity))
+    Public Sub WriteName() Implements ITransponding.WriteName
 
-        'Leave fleet if possible
-        If Not Me.Fleet Is Nothing Then
-
-            'Remove self from fleet and unset my fleet pointer
-            Me.Fleet.Ships.Remove(Me)
-            Me.Fleet = Nothing
-
-            'Add self to universal ship register
-            AllShips.Add(Me)
-
+        If TypeOf Me.Owner Is Human Then
+            ResetConsole()
+        Else
+            Console.ForegroundColor = Me.Owner.Race.Colour
         End If
+
+        Console.Write(Me.Name)
+
+        'Reset console defaults
+        ResetConsole()
 
     End Sub
 End Class

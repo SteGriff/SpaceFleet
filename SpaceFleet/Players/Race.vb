@@ -1,5 +1,5 @@
 ﻿Public Class Race
-    Implements IColourful
+    Implements ITransponding
 
     Public Name As String
     Public Face As String
@@ -32,7 +32,7 @@
 
     End Sub
 
-    Public Sub WriteName() Implements IColourful.WriteName
+    Public Sub WriteName() Implements ITransponding.WriteName
 
         Console.ForegroundColor = Me.Colour
         Console.Write(Me.Name)

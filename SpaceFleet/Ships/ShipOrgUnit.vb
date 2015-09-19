@@ -1,20 +1,11 @@
-﻿Public MustInherit Class MobileEntity
-    Implements IConsoleEntity, IColourful
+﻿''' <summary>
+''' An organisational unit for 1 or more ships.
+''' </summary>
+''' <remarks></remarks>
+Public Class ShipOrgUnit
+    Implements IConsoleEntity, IDisposable
 
-    Overridable ReadOnly Property Art As String
-        Get
-            Return "£"
-        End Get
-    End Property
-
-    Overridable ReadOnly Property Warp As Integer
-        Get
-            Return 0
-        End Get
-    End Property
-
-    MustOverride ReadOnly Property ShipContent As List(Of Ship)
-
+    Public Ships As List(Of Ship)
     Protected FleetNumber As Integer
 
     Public Owner As Player
@@ -37,14 +28,57 @@
         End Set
     End Property
 
-    Protected MyName As String
-    Public Property Name As String Implements IConsoleEntity.Name
+    Public ReadOnly Property Size As Integer
         Get
-            Return MyName
+            Return Ships.Count
         End Get
-        Set(value As String)
-            MyName = value
-        End Set
+    End Property
+
+    Public ReadOnly Property IsFleet As Boolean
+        Get
+            Return Ships.Count > 1
+        End Get
+    End Property
+
+    Overridable ReadOnly Property Art As String
+        Get
+            Select Case Me.Size
+                Case 0
+                    Throw New ApplicationException("0 ships in Fleet")
+                Case 1
+                    Return Ships.Single().Art
+                Case Else
+                    Return "» " & Me.Size
+            End Select
+        End Get
+    End Property
+
+    ReadOnly Property Warp As Integer
+        Get
+            Select Case Me.Size
+                Case 0
+                    Throw New ApplicationException("0 ships in Fleet")
+                Case 1
+                    Return Ships.Single().Warp
+                Case Else
+                    'Warp of the fleet = warp of the slowest ship
+                    Return Ships.Min(Function(s) (s.Warp))
+            End Select
+        End Get
+    End Property
+
+    Protected FleetName As String
+    Public ReadOnly Property Name As String Implements IConsoleEntity.Name
+        Get
+            Select Case Me.Size
+                Case 0
+                    Throw New ApplicationException("0 ships in Fleet")
+                Case 1
+                    Return Ships.Single().Name
+                Case Else
+                    Return FleetName
+            End Select
+        End Get
     End Property
 
     Public ReadOnly Property Moving As Boolean
@@ -53,8 +87,59 @@
         End Get
     End Property
 
-    Public Sub New()
-        Me.Name = ""
+    ''' <summary>
+    ''' Newly built ship based on a completed design
+    ''' </summary>
+    Public Sub New(Owner As Player, Design As Ship, AllShips As List(Of ShipOrgUnit))
+
+        Me.Owner = Owner
+        Me.Location = Owner.ConstructionPlanet.Location
+
+        Dim NewShip As Ship = Design.Clone()
+
+        AssignFleetInfo()
+        Associate(NewShip, AllShips)
+
+    End Sub
+
+    ''' <summary>
+    ''' Create org as branch off from previous fleet org
+    ''' </summary>
+    Public Sub New(PreviousOrg As ShipOrgUnit, Ship As Ship, AllShips As List(Of ShipOrgUnit))
+
+        Me.Owner = PreviousOrg.Owner
+        Me.Location = PreviousOrg.Location
+        Me.Destination = PreviousOrg.Destination
+
+        AssignFleetInfo()
+        Associate(Ship, AllShips)
+
+    End Sub
+
+    Private Sub Associate(Ship As Ship, AllShips As List(Of ShipOrgUnit))
+
+        If Me.Ships Is Nothing Then
+            Me.Ships = New List(Of Ship)
+        End If
+
+        'Put the ship in my roster
+        Me.Ships.Add(Ship)
+
+        'Set the ships unit to me
+        Ship.OrgUnit = Me
+
+        'Add me to the Player's list of units
+        Me.Owner.ShipOrgs.Add(Me)
+
+        'Add me to the global register
+        AllShips.Add(Me)
+
+    End Sub
+
+    Private Sub AssignFleetInfo()
+        Owner.TopFleetNumber += 1
+        FleetNumber = Me.Owner.TopFleetNumber
+        FleetName = String.Format("{0} fleet {1}", Owner.Race.Name, FleetNumber)
     End Sub
 
     Public Sub Draw() Implements IConsoleEntity.Draw
@@ -93,21 +178,6 @@
 
     End Sub
 
-    Public Sub WriteName() Implements IColourful.WriteName
-
-        If TypeOf Me.Owner Is Human Then
-            ResetConsole()
-        Else
-            Console.ForegroundColor = Me.Owner.Race.Colour
-        End If
-
-        Console.Write(Me.Name)
-
-        'Reset console defaults
-        ResetConsole()
-
-    End Sub
-
     Public Function IsBetween(A As Integer, B As Integer)
 
         If A > B Then
@@ -121,19 +191,19 @@
 
     End Function
 
-    Public Function IsEnemy(S As MobileEntity) As Boolean
+    Public Function IsEnemy(S As ShipOrgUnit) As Boolean
 
         Return S.Owner.Team <> Me.Owner.Team
 
     End Function
 
-    Public Function IsTeammate(S As MobileEntity) As Boolean
+    Public Function IsTeammate(S As ShipOrgUnit) As Boolean
 
         Return S.Owner.Team = Me.Owner.Team
 
     End Function
 
-    Public Function Move(AllShips As List(Of MobileEntity)) As CollectionChangeStatus
+    Public Function Move(AllShips As List(Of ShipOrgUnit)) As CollectionChangeStatus
 
         'Whether or not we actually move, don't process this ship again
         Me.Moved = True
@@ -183,15 +253,15 @@
     ''' </summary>
     ''' <param name="SomeShips">Ships to potentially interact with</param>
     ''' <param name="AllShips">All ships in the universe</param>
-    Private Function ProcessAllInteractions(SomeShips As List(Of MobileEntity), AllShips As List(Of MobileEntity)) As CollectionChangeStatus
+    Private Function ProcessAllInteractions(SomeShips As List(Of ShipOrgUnit), AllShips As List(Of ShipOrgUnit)) As CollectionChangeStatus
 
         Dim ChangeStatus As CollectionChangeStatus = CollectionChangeStatus.None
 
         'Clone AllShips into UnprocessedShips, but remove them
         ' when they are later processed
-        Dim UnprocessedShips As New List(Of MobileEntity)(SomeShips)
+        Dim UnprocessedShips As New List(Of ShipOrgUnit)(SomeShips)
 
-        For Each E As MobileEntity In SomeShips
+        For Each E As ShipOrgUnit In SomeShips
 
             UnprocessedShips.Remove(E)
             Dim ForState = ProcessEntityInteractions(E, AllShips)
@@ -217,7 +287,7 @@
 
     End Function
 
-    Private Function ProcessEntityInteractions(E As MobileEntity, AllShips As List(Of MobileEntity)) As ForLoopTransition
+    Private Function ProcessEntityInteractions(E As ShipOrgUnit, AllShips As List(Of ShipOrgUnit)) As ForLoopTransition
 
         'Don't interact with yourself
         If E.Equals(Me) Then
@@ -240,20 +310,9 @@
 
                 'Not an enemy and we have stopped on the same spot as the other guy
                 'They're allies - fleet up
-                'Does fleet already exist?
-                If TypeOf E Is Fleet Then
-                    'Join existing fleet
-                    DirectCast(Me, Ship).JoinFleet(E)
+                Me.MergeIn(E, AllShips)
+                Return ForLoopTransition.ExitFor
 
-                ElseIf TypeOf Me Is Fleet Then
-                    DirectCast(Me, Fleet).AssembleFleet(Me.Owner, Me.Location, AllShips)
-                    Return ForLoopTransition.ExitFor
-
-                ElseIf TypeOf Me Is Ship And DirectCast(Me, Ship).Fleet Is Nothing Then
-                    'No existing fleet, so form one
-                    Dim F As New Fleet(Me.Owner, Me.Location, AllShips)
-                    Return ForLoopTransition.ExitFor
-                End If
             End If
 
         End If
@@ -261,6 +320,51 @@
         Return ForLoopTransition.NextFor
 
     End Function
+
+    Private Sub MergeIn(Ally As ShipOrgUnit, AllShips As List(Of ShipOrgUnit))
+
+        'Take all the ships from the other org
+        Me.Ships.AddRange(Ally.Ships)
+
+        AllShips.Remove(Ally)
+
+    End Sub
+
+    Public Sub RemoveShip(aShip As Ship, AllShips As List(Of ShipOrgUnit))
+
+        Me.Ships.Remove(aShip)
+
+        'Nothing left, destroy me
+        If Me.Size = 0 Then
+            AllShips.Remove(Me)
+            Me.Dispose()
+        End If
+
+    End Sub
+
+    Public Sub DisbandFleet(AllShips As List(Of ShipOrgUnit))
+
+        'Remove ships until only one left in this org
+        Do While Me.Size > 1
+
+            Dim ShipIterator = Ships.GetEnumerator()
+            ShipIterator.MoveNext()
+
+            Dim S = ShipIterator.Current
+
+            'Disassociate from me
+            Me.Ships.Remove(S)
+
+            'Create new unit and associate the ship with that
+            Dim YourNewOrg As ShipOrgUnit = New ShipOrgUnit(Me, S, AllShips)
+
+        Loop
+
+    End Sub
+
+    Public Sub Dispose() Implements IDisposable.Dispose
+        'TODO
+    End Sub
 
     Private Enum ForLoopTransition
         NextFor

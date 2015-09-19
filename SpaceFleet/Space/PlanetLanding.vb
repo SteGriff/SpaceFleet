@@ -4,7 +4,7 @@
 
     End Sub
 
-    Public Sub Land(ByRef Planet As Planet, ByRef Lander As MobileEntity)
+    Public Sub Land(ByRef Planet As Planet, ByRef Lander As ShipOrgUnit)
 
         'N.b. Attacking player can be obtained with Lander.Owner
 
@@ -54,7 +54,7 @@
 
     End Function
 
-    Private Sub Intro(Lander As MobileEntity)
+    Private Sub Intro(Lander As ShipOrgUnit)
 
         Console.Clear()
         Console.WriteLine()
@@ -70,7 +70,7 @@
         Console.WriteLine("  Unit attempting foreign planet landing")
         ResetConsole()
 
-        Dim PlayerTeam = Lander.ShipContent
+        Dim PlayerTeam = Lander.Ships
         TabbedTeamList(PlayerTeam, "Allied units")
 
         PressReturnToClear()

@@ -31,7 +31,7 @@ Module SpaceFleet
         Dim PlayersFirstPlanets As New List(Of Planet)({Earth, Mars})
 
         'Initialise master ship list
-        Dim AllShips As New List(Of MobileEntity)
+        Dim AllShips As New List(Of ShipOrgUnit)
 
         'Home star for initial location
         Dim Sol As New Star(0, False)
@@ -61,7 +61,7 @@ Module SpaceFleet
         Dim GameOver As Boolean = False
         Dim TurnTaken As Boolean = True
         Dim CommsMessages As New List(Of CommsMessage)
-        
+
         Do Until GameOver
 
             Dim Totals As SystemTotals
@@ -142,7 +142,7 @@ Module SpaceFleet
 
                 Case ConsoleKey.O
                     'orders
-                    OrdersManagement(Planets, You.Ships, AllShips)
+                    OrdersManagement(Planets, You.ShipOrgs, AllShips)
 
                 Case ConsoleKey.D
                     'debug
@@ -188,15 +188,7 @@ Module SpaceFleet
         PressReturn()
     End Sub
 
-    Private Function ShipLocationDelegate(S As Ship) As Integer
-        Return S.Location
-    End Function
-
-    Private Function KeySelectionDelegate(kvp As KeyValuePair(Of Integer, Object)) As Integer
-        Return kvp.Key
-    End Function
-
-    Private Function DrawMap(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of MobileEntity)) As Dictionary(Of Integer, IConsoleEntity)
+    Private Function DrawMap(Planets As List(Of Planet), YourShips As List(Of ShipOrgUnit), AllShips As List(Of ShipOrgUnit)) As Dictionary(Of Integer, IConsoleEntity)
 
         'TODO Future feature - Sensors technology affect range
         'Dim SensorRange As Integer = Technologies(TechnologyType.Sensors) * 10
@@ -225,7 +217,7 @@ Module SpaceFleet
         Next
 
         'Add all visible ships to Entities
-        For Each S As MobileEntity In AllShips.OrderBy(Function(x) (x.Location))
+        For Each S As ShipOrgUnit In AllShips.OrderBy(Function(x) (x.Location))
 
             If S.Location > FurthestExploredReach Then
                 Exit For
@@ -253,7 +245,7 @@ Module SpaceFleet
 
 #Region "Orders"
 
-    Private Sub OrdersManagement(Planets As List(Of Planet), YourShips As List(Of Ship), AllShips As List(Of MobileEntity))
+    Private Sub OrdersManagement(Planets As List(Of Planet), YourShips As List(Of ShipOrgUnit), AllShips As List(Of ShipOrgUnit))
 
         Do
 
@@ -279,10 +271,10 @@ Module SpaceFleet
 
             If Selection.Entity Is Nothing Then
 
-                If Selection.HasCommand AndAlso Selection.Command = "D" AndAlso TypeOf SelectedShip Is Fleet Then
+                If Selection.HasCommand AndAlso Selection.Command = "D" AndAlso SelectedShip.IsFleet Then
                     Console.WriteLine()
                     Console.WriteLine("Ok, {0} disbanded into individual ships", SelectedShip.Name)
-                    DirectCast(SelectedShip, Fleet).DisbandFleet(AllShips)
+                    SelectedShip.DisbandFleet(AllShips)
                 Else
                     'Cancelled
                     Return
@@ -309,7 +301,7 @@ Module SpaceFleet
 
     End Sub
 
-    Private Function SelectDestinationOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity), SelectedShip As MobileEntity, AllShips As List(Of MobileEntity)) As SelectionModel
+    Private Function SelectDestinationOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity), SelectedShip As ShipOrgUnit, AllShips As List(Of ShipOrgUnit)) As SelectionModel
 
         Dim Selection = New SelectionModel()
 
@@ -318,7 +310,7 @@ Module SpaceFleet
             Dim Prompt As String = String.Format("[Return] Cancel{0}Enter destination [number]: ", Environment.NewLine)
 
             'First, offer disband option for fleet (if selected)
-            If TypeOf SelectedShip Is Fleet Then
+            If SelectedShip.IsFleet Then
                 Prompt = String.Format("[D] Disband fleet{0}", Environment.NewLine) + Prompt
             End If
 
@@ -347,7 +339,7 @@ Module SpaceFleet
 
     End Function
 
-    Private Function SelectShipOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As MobileEntity
+    Private Function SelectShipOnMap(EntityMapping As Dictionary(Of Integer, IConsoleEntity)) As ShipOrgUnit
 
         If EntityMapping.Count > 0 Then
 
@@ -355,7 +347,7 @@ Module SpaceFleet
             Dim Prompt As String = String.Format("[Return] Cancel{0}Enter ship [number]: ", Environment.NewLine)
 
             Do Until EntityMapping.ContainsKey(ShipSelection.Number) _
-                AndAlso TypeOf EntityMapping(ShipSelection.Number) Is MobileEntity
+                AndAlso TypeOf EntityMapping(ShipSelection.Number) Is ShipOrgUnit
 
                 ShipSelection = GetNumber(Prompt)
 
@@ -364,7 +356,7 @@ Module SpaceFleet
                 End If
             Loop
 
-            Do Until TypeOf CType(EntityMapping(ShipSelection.Number), MobileEntity).Owner Is Human
+            Do Until TypeOf CType(EntityMapping(ShipSelection.Number), ShipOrgUnit).Owner Is Human
                 ShipSelection = GetNumber("That ship isn't yours; try again: ")
 
                 If ShipSelection.Cancelled Then
@@ -372,7 +364,7 @@ Module SpaceFleet
                 End If
             Loop
 
-            Return CType(EntityMapping(ShipSelection.Number), MobileEntity)
+            Return CType(EntityMapping(ShipSelection.Number), ShipOrgUnit)
 
         End If
 
@@ -529,7 +521,7 @@ Module SpaceFleet
         ShipColumnHeaders()
         ResetConsole()
 
-        For Each Item As Ship In You.Ships
+        For Each Item In You.ShipOrgs.SelectMany(Function(s) (s.Ships))
             Item.Info()
         Next
 
@@ -771,7 +763,7 @@ Module SpaceFleet
     Private Sub DebugStuff(Enemies As List(Of Enemy))
 
         Const Template As String = "{0,8} {1,-20} {2,-6} {3,-6} {4,-6}"
-        Dim AllShips As New List(Of Ship)
+        Dim AllShips As New List(Of ShipOrgUnit)
 
         Console.WriteLine(Template, "Face", "Name", "Ablty", "TBgn", "TEnd")
 
@@ -781,11 +773,11 @@ Module SpaceFleet
             Console.WriteLine(Template, E.Race.Face, E.Race.Name, E.Ability, E.TerritoryBegin, E.TerritoryEnd)
             ResetConsole()
 
-            AllShips.AddRange(E.Ships)
+            AllShips.AddRange(E.ShipOrgs)
 
         Next
 
-        For Each S As Ship In AllShips.OrderBy(Function(x) (x.Location))
+        For Each S In AllShips.OrderBy(Function(x) (x.Location))
             Console.ForegroundColor = S.Owner.Race.Colour
             Console.WriteLine("{0,-6} {1,25}", S.Location, S.Name)
             ResetConsole()
@@ -836,9 +828,9 @@ Module SpaceFleet
 
     End Sub
 
-    Private Sub ProcessMovement(AllShips As List(Of MobileEntity), You As Human, Enemies As List(Of Enemy), Planets As List(Of Planet), Messages As List(Of CommsMessage))
+    Private Sub ProcessMovement(AllShips As List(Of ShipOrgUnit), You As Human, Enemies As List(Of Enemy), Planets As List(Of Planet), Messages As List(Of CommsMessage))
 
-        For Each S As MobileEntity In AllShips
+        For Each S As ShipOrgUnit In AllShips
             S.Moved = False
         Next
 
@@ -847,7 +839,7 @@ Module SpaceFleet
         Do While UnmovedShips.Count > 0
 
             'Move all moving ships
-            For Each S As MobileEntity In UnmovedShips
+            For Each S As ShipOrgUnit In UnmovedShips
 
                 'Handle movement
                 ' if battle is detected, 'Engaged' flag is set and involved ships come to stop
@@ -885,7 +877,7 @@ Module SpaceFleet
                 End If
 
                 'Collection modified, drop into Do Loop
-                If CollectionStatus = MobileEntity.CollectionChangeStatus.Changed Then
+                If CollectionStatus = ShipOrgUnit.CollectionChangeStatus.Changed Then
                     Exit For
                 End If
 
@@ -897,15 +889,15 @@ Module SpaceFleet
 
     End Sub
 
-    Private Sub ProcessCombat(AllShips As List(Of MobileEntity))
+    Private Sub ProcessCombat(AllShips As List(Of ShipOrgUnit))
 
         'Now process all combat
 
-        Dim Combatants = AllShips.Where(Function(x) (x.Engaged))
+        Dim CombatUnits = AllShips.Where(Function(x) (x.Engaged))
 
-        Do While Combatants.Count > 0
+        Do While CombatUnits.Count > 0
 
-            For Each S As Ship In Combatants
+            For Each S In CombatUnits
 
                 'Handle battles
                 Dim Battle As New SpaceBattle(S.Location)
@@ -917,7 +909,7 @@ Module SpaceFleet
 
             Next
 
-            Combatants = AllShips.Where(Function(x) (x.Engaged))
+            CombatUnits = AllShips.Where(Function(x) (x.Engaged))
 
         Loop
 

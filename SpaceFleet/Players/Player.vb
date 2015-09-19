@@ -13,7 +13,7 @@
     Public Researching As TechnologyType = TechnologyType.Research
 
     'Ship and Ship Design init
-    Public Ships As New List(Of Ship)
+    Public ShipOrgs As New List(Of ShipOrgUnit)
     Public ShipDesigns As New List(Of Ship)
     Public CurrentlyBuilding As Ship
 
@@ -63,13 +63,13 @@
         End Get
     End Property
 
-    Public Function HasInTerritory(S As MobileEntity) As Boolean
+    Public Function HasInTerritory(S As ShipOrgUnit) As Boolean
 
         Return TerritoryBegin <= S.Location AndAlso S.Location <= TerritoryEnd
 
     End Function
 
-    Public Sub New(Team As Integer, R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of MobileEntity))
+    Public Sub New(Team As Integer, R As Race, HomeStar As Star, InitialPlanets As List(Of Planet), UniversalShips As List(Of ShipOrgUnit))
 
         Me.Team = Team
         Me.Race = R
@@ -86,7 +86,7 @@
 
     End Sub
 
-    Public Sub InitialiseShips(UniversalShips As List(Of MobileEntity))
+    Public Sub InitialiseShips(AllShips As List(Of ShipOrgUnit))
 
         Dim Attack As Byte() = {1, 0, 0}
         Dim Defence As Byte() = {0, 0, 0}
@@ -97,19 +97,20 @@
         CurrentlyBuilding = ShipDesigns(0)
         ProductionPoints = 0
 
-        Dim FirstShip = CType(ShipDesigns(0).BuildClonedInstance(Me, UniversalShips), Ship)
-
-        Ships.Add(FirstShip)
-
+        Dim FirstOrg = New ShipOrgUnit(Me, ShipDesigns(0), AllShips)
+        
     End Sub
 
-    Public Function TryBuildShip(UniversalShips As List(Of MobileEntity)) As Boolean
+    Public Function TryBuildShip(AllShips As List(Of ShipOrgUnit)) As Boolean
 
         'Production points have satisfied current build job
         If (ProductionPoints >= CurrentlyBuilding.Complexity) Then
 
             'Gain the ship by cloning the design into the ship roster
-            Ships.Add(CType(CurrentlyBuilding.BuildClonedInstance(Me, UniversalShips), Ship))
+            Dim NewOrg As New ShipOrgUnit(Me, CurrentlyBuilding, AllShips)
+
+
+            'ShipOrgs.Add(CType(CurrentlyBuilding.BuildClonedInstance(Me, UniversalShips), Ship))
 
             'Calculate leftover production pts
             ProductionPoints -= CurrentlyBuilding.Complexity

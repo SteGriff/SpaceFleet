@@ -62,12 +62,12 @@
 
     End Function
 
-    Public Sub Fight(ByRef AllShips As List(Of MobileEntity))
+    Public Sub Fight(ByRef AllShips As List(Of ShipOrgUnit))
 
         'All things on this spot, with engaged flag set
         Dim Combatants = AllShips _
                                   .Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location)) _
-                                  .SelectMany(Function(sh) (sh.ShipContent)) _
+                                  .SelectMany(Function(sh) (sh.Ships)) _
                                   .ToList()
 
         Dim PlayerTeam As List(Of Ship) = Combatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
@@ -120,7 +120,7 @@
 
     End Sub
 
-    Private Sub KillShip(S As Ship, AllShips As List(Of MobileEntity), Combatants As List(Of Ship))
+    Private Sub KillShip(S As Ship, AllShips As List(Of ShipOrgUnit), Combatants As List(Of Ship))
         S.Die(AllShips)
         Combatants.Remove(S)
     End Sub
@@ -150,7 +150,7 @@
     Private Sub Disengage(ByRef Ships As IEnumerable(Of Ship))
 
         For Each S As Ship In Ships
-            S.Engaged = False
+            S.OrgUnit.Engaged = False
         Next
 
     End Sub

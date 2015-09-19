@@ -1,5 +1,5 @@
 ﻿Public Class Planet
-    Implements IConsoleEntity, IColourful
+    Implements IConsoleEntity, ITransponding
 
     Public MyName As String
     Public Population As Decimal ' x billion people
@@ -54,17 +54,14 @@
         End Set
     End Property
 
-    Public Property Name As String Implements IConsoleEntity.Name
+    Public ReadOnly Property Name As String Implements IConsoleEntity.Name
         Get
             Return MyName
         End Get
-        Set(value As String)
-            MyName = value
-        End Set
     End Property
 
     Public Sub New(Name As String, Location As Integer, Population As Decimal, Capacity As Decimal, Resources As Byte, Colour As ConsoleColor, Art As String)
-        Me.Name = Name
+        MyName = Name
         Me.Location = Location
         Me.Population = Population
         Me.Capacity = Capacity
@@ -82,7 +79,7 @@
 
     End Sub
 
-    Public Sub WriteName() Implements IColourful.WriteName
+    Public Sub WriteName() Implements ITransponding.WriteName
 
         Console.ForegroundColor = Me.Colour
         Console.Write(Me.Name)
