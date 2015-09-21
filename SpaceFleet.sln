@@ -1,7 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30501.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SpaceFleet", "SpaceFleet\SpaceFleet.vbproj", "{E46F0427-4D27-4085-A246-85A8DF467A9F}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "SpaceFleetTests", "SpaceFleetTests\SpaceFleetTests.vbproj", "{E2FA10C2-3509-4E16-9811-0FE709066E8C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +17,10 @@ Global
 		{E46F0427-4D27-4085-A246-85A8DF467A9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E46F0427-4D27-4085-A246-85A8DF467A9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E46F0427-4D27-4085-A246-85A8DF467A9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E2FA10C2-3509-4E16-9811-0FE709066E8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E2FA10C2-3509-4E16-9811-0FE709066E8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E2FA10C2-3509-4E16-9811-0FE709066E8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E2FA10C2-3509-4E16-9811-0FE709066E8C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

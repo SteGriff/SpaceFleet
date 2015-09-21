@@ -9,6 +9,20 @@
     Dim Age As Integer
     Dim Location As Integer
 
+    Private Combatants As List(Of Ship)
+
+    Private ReadOnly Property Allies As List(Of Ship)
+        Get
+            Return Combatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
+        End Get
+    End Property
+
+    Private ReadOnly Property Hostiles As List(Of Ship)
+        Get
+            Return Combatants.Where(Function(s) (s.Owner.Team = Team.Enemy)).ToList()
+        End Get
+    End Property
+
     Public Sub New(Location As Integer)
         Age = 0
         Me.Location = Location
@@ -65,23 +79,20 @@
     Public Sub Fight(ByRef AllShips As List(Of ShipOrgUnit))
 
         'All things on this spot, with engaged flag set
-        Dim Combatants = AllShips _
+        Combatants = AllShips _
                                   .Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location)) _
                                   .SelectMany(Function(sh) (sh.Ships)) _
                                   .ToList()
 
-        Dim PlayerTeam As List(Of Ship) = Combatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
-        Dim Hostiles As List(Of Ship) = Combatants.Where(Function(s) (s.Owner.Team = Team.Enemy)).ToList()
-
         'Dim Victory As BattleResult = BattleResult.Draw
 
         'Display intro and wait for key press
-        Intro(PlayerTeam, Hostiles)
+        Intro(Allies, Hostiles)
 
         Do
             For Each S As Ship In Combatants.OrderBy(Function(x) (x.Warp))
 
-                Banner(PlayerTeam, Hostiles)
+                Banner(Allies, Hostiles)
 
                 If S.NoHealth Then
                     Exit For
@@ -108,12 +119,9 @@
 
             Next
 
-            PlayerTeam = Combatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
-            Hostiles = Combatants.Where(Function(s) (s.Owner.Team = Team.Enemy)).ToList()
+        Loop Until Allies.Count = 0 Or Hostiles.Count = 0
 
-        Loop Until PlayerTeam.Count = 0 OrElse Hostiles.Count = 0
-
-        AnnounceResult(PlayerTeam, Hostiles)
+        AnnounceResult(Allies, Hostiles)
         Disengage(Combatants)
 
         Console.ReadLine()

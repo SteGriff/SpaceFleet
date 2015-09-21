@@ -308,9 +308,9 @@ Public Class ShipOrgUnit
                 Location = E.Location AndAlso _
                 IsTeammate(E) Then
 
-                'Not an enemy and we have stopped on the same spot as the other guy
-                'They're allies - fleet up
-                Me.MergeIn(E, AllShips)
+                'We have stopped on the same spot as an allied ship
+                ' Join her fleet
+                E.Absorb(Me, AllShips)
                 Return ForLoopTransition.ExitFor
 
             End If
@@ -321,7 +321,7 @@ Public Class ShipOrgUnit
 
     End Function
 
-    Private Sub MergeIn(Ally As ShipOrgUnit, AllShips As List(Of ShipOrgUnit))
+    Private Sub Absorb(Ally As ShipOrgUnit, AllShips As List(Of ShipOrgUnit))
 
         'Take all the ships from the other org
         Me.Ships.AddRange(Ally.Ships)
