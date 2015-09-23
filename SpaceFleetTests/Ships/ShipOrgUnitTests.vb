@@ -7,6 +7,23 @@ Namespace SpaceFleet.Tests
 
     <TestClass()> Public Class ShipOrgUnitTests
 
+        ''' <summary>
+        ''' Test that when a New Player is created, it comes with a ShipOrgUnit
+        ''' and that that ShipOrgUnit is added to the global register
+        ''' </summary>
+        ''' <remarks></remarks>
+        <TestMethod()>
+        Public Sub ShipOrgInitTest()
+
+            Dim AllUnits As New List(Of ShipOrgUnit)()
+            Dim ThePlayer = GetTestPlayer(AllUnits)
+
+            'Test that a new 
+            Assert.IsTrue(AllUnits.Count = 1)
+            Assert.IsTrue(AllUnits.Contains(ThePlayer.ShipOrgs.Single()))
+
+        End Sub
+
         <TestMethod()>
         Public Sub MergeFleetTest()
 
@@ -82,21 +99,6 @@ Namespace SpaceFleet.Tests
 
         End Sub
 
-        Private Function GetTestPlayer(AllUnits As List(Of ShipOrgUnit)) As Player
-
-            Dim SomeRace As New Race("Testers", "._.", ConsoleColor.Blue)
-            Dim HomeStar As New Star(0, True)
-            Dim FirstPlanets As New List(Of Planet)({New Planet("Home", 0, 1, 2, 1, ConsoleColor.Blue, "O")})
-
-            Return New Player(1, SomeRace, HomeStar, FirstPlanets, AllUnits)
-
-        End Function
-
-        Private Function GetTestShip() As Ship
-
-            Return New Ship("Fighter", 1, 1, New Byte() {1, 1, 1}, New Byte() {1, 1, 1})
-
-        End Function
 
     End Class
 

@@ -3,6 +3,7 @@
 
     Public Name As String
     Public DesignName As String
+    Public Guid As Guid
     Public HP As Byte
     Public MaxHP As Byte
     Public OrgUnit As ShipOrgUnit
@@ -32,15 +33,17 @@
     End Property
 
     Sub New()
-        MyBase.New()
+
+        AssignId()
         Me.DesignName = ""
+
     End Sub
 
     Sub New(ByVal DesignName As String, ByVal HP As Byte, ByVal Warp As Byte, Attack As Byte(), Defence As Byte())
-        MyBase.New()
 
+        AssignId()
         Me.DesignName = DesignName
-        Me.Name = DesignName & " " & Guid.NewGuid().ToString.Substring(0, 5)
+        Me.Name = DesignName & " " & Me.Guid.ToString.Substring(0, 5)
         Me.HP = HP
         Me.MaxHP = HP
         MyWarp = Warp
@@ -48,6 +51,10 @@
         Me.Attack = Attack
         Me.Defence = Defence
 
+    End Sub
+
+    Private Sub AssignId()
+        Guid = System.Guid.NewGuid()
     End Sub
 
     Public ReadOnly Property Complexity As Decimal

@@ -9,17 +9,17 @@
     Dim Age As Integer
     Dim Location As Integer
 
-    Private Combatants As List(Of Ship)
+    Private RemainingCombatants As List(Of Ship)
 
     Private ReadOnly Property Allies As List(Of Ship)
         Get
-            Return Combatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
+            Return RemainingCombatants.Where(Function(s) (s.Owner.Team = Team.Human)).ToList()
         End Get
     End Property
 
     Private ReadOnly Property Hostiles As List(Of Ship)
         Get
-            Return Combatants.Where(Function(s) (s.Owner.Team = Team.Enemy)).ToList()
+            Return RemainingCombatants.Where(Function(s) (s.Owner.Team = Team.Enemy)).ToList()
         End Get
     End Property
 
@@ -70,67 +70,79 @@
 
     End Sub
 
-    Public Function AllDead(Team As List(Of Ship))
-
-        Return Team.All(Function(s) (s.NoHealth))
-
+    Private Function FiringOrder(Combatants As List(Of Ship)) As List(Of Guid)
+        Return Combatants _
+            .OrderBy(Function(x) (x.Warp)) _
+            .Select(Function(x) (x.Guid)) _
+            .ToList()
     End Function
 
     Public Sub Fight(ByRef AllShips As List(Of ShipOrgUnit))
 
         'All things on this spot, with engaged flag set
-        Combatants = AllShips _
-                                  .Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location)) _
-                                  .SelectMany(Function(sh) (sh.Ships)) _
-                                  .ToList()
+        RemainingCombatants = AllShips _
+                        .Where(Function(sh) (sh.Engaged AndAlso sh.Location = Me.Location)) _
+                        .SelectMany(Function(sh) (sh.Ships)) _
+                        .ToList()
 
         'Dim Victory As BattleResult = BattleResult.Draw
 
         'Display intro and wait for key press
         Intro(Allies, Hostiles)
 
+        Dim NextShipToFire As Integer = 0
+
         Do
-            For Each S As Ship In Combatants.OrderBy(Function(x) (x.Warp))
+            'Ordered list of GUIDs representing firing order
+            ' refreshed each time to stay up-to-date with ship deaths
+            Dim RemainingShipIds = FiringOrder(RemainingCombatants)
 
-                Banner(Allies, Hostiles)
+            'Get the ship that's meant to fire next
+            Dim S As Ship = RemainingCombatants.Where(Function(x) (x.Guid = RemainingShipIds(NextShipToFire))).Single()
+            Console.WriteLine(" >> Now firing: {0}: {1} ({2})", NextShipToFire, S.Name, S.Guid)
 
-                If S.NoHealth Then
-                    Exit For
-                End If
+            Banner(Allies, Hostiles)
 
-                Dim Enemies = EnemiesOf(S, Combatants)
-                Dim MinPercentHP = Enemies.Min(Function(e) (e.PercentHP))
-                Dim Target = Enemies.Where(Function(e) (e.PercentHP = MinPercentHP)).FirstOrDefault()
+            'Pick an enemy to fire at
+            Dim Enemies = EnemiesOf(S, RemainingCombatants)
+            Dim MinPercentHP = Enemies.Min(Function(e) (e.PercentHP))
+            Dim Target = Enemies.Where(Function(e) (e.PercentHP = MinPercentHP)).FirstOrDefault()
 
-                S.FireOn(Target)
+            'Fire!
+            S.FireOn(Target)
 
-                'Remove anyone dead from global ship register
-                If S.NoHealth Then
-                    KillShip(S, AllShips, Combatants)
-                End If
+            'Remove anyone dead from global ship register
+            If S.NoHealth Then
+                KillShip(S, AllShips, RemainingCombatants)
+            End If
 
-                If Target.NoHealth Then
-                    KillShip(S, AllShips, Combatants)
-                End If
+            If Target.NoHealth Then
+                KillShip(Target, AllShips, RemainingCombatants)
+            End If
 
-                Console.WriteLine()
-                Console.WriteLine("Press return")
-                Console.ReadLine()
+            Console.WriteLine()
+            Console.WriteLine("Press return")
+            Console.ReadLine()
 
-            Next
+            'This is like a manual For loop
+            ' which lets us remove ships but carry on (to the next one to fire)
+            NextShipToFire += 1
+            NextShipToFire = NextShipToFire Mod RemainingShipIds.Count
 
         Loop Until Allies.Count = 0 Or Hostiles.Count = 0
 
         AnnounceResult(Allies, Hostiles)
-        Disengage(Combatants)
+        Disengage(RemainingCombatants)
 
         Console.ReadLine()
 
     End Sub
 
-    Private Sub KillShip(S As Ship, AllShips As List(Of ShipOrgUnit), Combatants As List(Of Ship))
-        S.Die(AllShips)
-        Combatants.Remove(S)
+    Private Sub KillShip(Victim As Ship, AllShips As List(Of ShipOrgUnit), ByRef RemainingCombatants As List(Of Ship))
+
+        Victim.Die(AllShips)
+        RemainingCombatants.Remove(Victim)
+
     End Sub
 
     Private Sub AnnounceResult(PlayerTeam As IEnumerable(Of Ship), Hostiles As IEnumerable(Of Ship))

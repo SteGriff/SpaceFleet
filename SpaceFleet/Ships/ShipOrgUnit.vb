@@ -337,6 +337,7 @@ Public Class ShipOrgUnit
         'Nothing left, destroy me
         If Me.Size = 0 Then
             AllShips.Remove(Me)
+            Owner.ShipOrgs.Remove(Me)
             Me.Dispose()
         End If
 
