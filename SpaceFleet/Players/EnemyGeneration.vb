@@ -12,7 +12,14 @@
 
         Dim Enemies As New List(Of Enemy)
 
+        Dim StarNumber As Integer = 0
         For Each S As Star In Stars
+            StarNumber += 1
+
+            'Don't populate closest neighbouring star
+            If StarNumber = 1 Then
+                Continue For
+            End If
 
             If S.Planets.Count = 0 Then
                 'Nothing to claim in this system

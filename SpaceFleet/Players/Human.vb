@@ -7,4 +7,12 @@
 
     End Sub
 
+    Public Overrides Sub Claim(Planet As Planet)
+
+        Dim myPlanet = New MyPlanet(Planet)
+        Me.Planets.Add(myPlanet)
+
+    End Sub
+
+
 End Class

@@ -10,6 +10,7 @@
 
         Dim Planets As New List(Of Planet)
 
+        'Generate stars
         For s As Integer = 1 To 101
 
             Dim StarPlanetsHaveGreekLetters As Boolean = (Randomiser.Next(2) = 0)

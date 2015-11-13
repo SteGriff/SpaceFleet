@@ -60,6 +60,10 @@
         End Get
     End Property
 
+    Public Sub New()
+
+    End Sub
+
     Public Sub New(Name As String, Location As Integer, Population As Decimal, Capacity As Decimal, Resources As Byte, Colour As ConsoleColor, Art As String)
         MyName = Name
         Me.Location = Location

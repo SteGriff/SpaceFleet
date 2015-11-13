@@ -58,6 +58,77 @@
 
     End Sub
 
+    Public Sub ConsiderResearch(Player As Human)
+
+        'Sum up information about the Player's attack/defend compared to mine
+        Dim AllPlayerShips = Player.ShipOrgs.SelectMany(Function(org) (org.Ships))
+        Dim PlayerMostDamagingWeapon As WeaponType
+        Dim PlayerTotalAttack As Integer
+
+        Dim AllMyShips = ShipOrgs.SelectMany(Function(org) (org.Ships))
+        Dim MyMostDamagingWeapon As WeaponType
+        Dim MyTotalAttack As Integer
+
+        WeaponStats(AllPlayerShips, PlayerMostDamagingWeapon, PlayerTotalAttack)
+        WeaponStats(AllMyShips, MyMostDamagingWeapon, MyTotalAttack)
+
+        If PlayerTotalAttack > MyTotalAttack Then
+            'Improve our weapons until we're level with player
+            Dim PlayerWeakness As WeaponType
+            ArmourStats(AllPlayerShips, PlayerWeakness)
+
+            Technologies(PlayerWeakness).Votes += 1
+
+        Else
+            'We have same or better attack, so research armour
+            ' Vote for an armour type based on what kills us
+            Dim DefendingTechnology = ResearchAdvisory.DefendAgainst(PlayerMostDamagingWeapon)
+
+            Technologies(DefendingTechnology).Votes += 1
+
+        End If
+
+    End Sub
+
+    Private Sub WeaponStats(ByVal Ships As IEnumerable(Of Ship), ByRef MostDamagingWeapon As WeaponType, ByRef TotalAttack As Integer)
+
+        'Dim MostFearedWeapon As WeaponType = WeaponType.Laser
+        Dim HighestWeaponDamage As Integer = 0
+        Dim TotalWeaponDamage(3) As Integer
+        'Dim TotalAttack As Integer = 0
+
+        For w As Integer = 0 To 2
+            'Don't use the Iteration variable within the lambda:
+            Dim ThisWeapon As WeaponType = w
+            TotalWeaponDamage(w) = Ships.Sum(Function(sh) (sh.Attack(ThisWeapon)))
+            TotalAttack += TotalWeaponDamage(w)
+
+            If TotalWeaponDamage(w) > HighestWeaponDamage Then
+                HighestWeaponDamage = TotalWeaponDamage(w)
+                MostDamagingWeapon = ThisWeapon
+            End If
+        Next
+
+    End Sub
+
+    Private Sub ArmourStats(ByVal Ships As IEnumerable(Of Ship), ByRef WeaponVulnerability As WeaponType)
+
+        Dim LowestArmourValue As Integer = 0
+        Dim TotalDefence(3) As Integer
+
+        For w As Integer = 0 To 2
+            Dim ThisWeapon As WeaponType = w
+            TotalDefence(w) = Ships.Sum(Function(sh) (sh.Defence(ThisWeapon)))
+
+            If TotalDefence(w) < LowestArmourValue Then
+                LowestArmourValue = TotalDefence(w)
+                WeaponVulnerability = w
+            End If
+        Next
+
+    End Sub
+
+
     Private Sub DecideResearch()
 
         'Get all techs with max votes

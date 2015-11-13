@@ -8,6 +8,10 @@
 
     Dim Age As Integer
     Dim Location As Integer
+    Dim WaitForInput As Func(Of String)
+
+    Dim AlliesDamageDealt(3) As Integer
+    Dim EnemyDamageDealt(3) As Integer
 
     Private RemainingCombatants As List(Of Ship)
 
@@ -23,9 +27,11 @@
         End Get
     End Property
 
-    Public Sub New(Location As Integer)
+    Public Sub New(Location As Integer, ReadLineDelegate As Func(Of String))
         Age = 0
         Me.Location = Location
+        Me.WaitForInput = ReadLineDelegate
+
     End Sub
 
     Private Sub Intro(PlayerTeam As IEnumerable(Of Ship), Hostiles As IEnumerable(Of Ship))
@@ -49,7 +55,7 @@
 
         Console.WriteLine()
         Console.WriteLine("Press return")
-        Console.ReadLine()
+        WaitForInput()
         Console.Clear()
 
     End Sub
@@ -85,7 +91,10 @@
                         .SelectMany(Function(sh) (sh.Ships)) _
                         .ToList()
 
-        'Dim Victory As BattleResult = BattleResult.Draw
+        If (RemainingCombatants.Count = 0) Then
+            'No one is fighting!
+            Return
+        End If
 
         'Display intro and wait for key press
         Intro(Allies, Hostiles)
@@ -109,20 +118,16 @@
             Dim Target = Enemies.Where(Function(e) (e.PercentHP = MinPercentHP)).FirstOrDefault()
 
             'Fire!
-            S.FireOn(Target)
+            Dim TargetDestroyed As Boolean = S.FireOn(Target, AllShips)
 
-            'Remove anyone dead from global ship register
-            If S.NoHealth Then
-                KillShip(S, AllShips, RemainingCombatants)
-            End If
-
-            If Target.NoHealth Then
-                KillShip(Target, AllShips, RemainingCombatants)
+            'Remove from battle if dead
+            If TargetDestroyed Then
+                RemainingCombatants.Remove(Target)
             End If
 
             Console.WriteLine()
             Console.WriteLine("Press return")
-            Console.ReadLine()
+            WaitForInput()
 
             'This is like a manual For loop
             ' which lets us remove ships but carry on (to the next one to fire)
@@ -134,7 +139,7 @@
         AnnounceResult(Allies, Hostiles)
         Disengage(RemainingCombatants)
 
-        Console.ReadLine()
+        WaitForInput()
 
     End Sub
 

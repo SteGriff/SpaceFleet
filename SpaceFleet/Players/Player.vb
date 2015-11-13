@@ -88,8 +88,8 @@
 
     Public Sub InitialiseShips(AllShips As List(Of ShipOrgUnit))
 
-        Dim Attack As Byte() = {1, 0, 0}
-        Dim Defence As Byte() = {0, 0, 0}
+        Dim Attack As Integer() = {1, 0, 0}
+        Dim Defence As Integer() = {0, 0, 0}
 
         ShipDesigns.Add(New Ship(Race.Name + " drone", 5, 2, Attack, Defence))
         'ShipDesigns.Add(New Ship(Race.Name + " frigate", 2, 2, Attack, Defence))
@@ -109,9 +109,6 @@
             'Gain the ship by cloning the design into the ship roster
             Dim NewOrg As New ShipOrgUnit(Me, CurrentlyBuilding, AllShips)
 
-
-            'ShipOrgs.Add(CType(CurrentlyBuilding.BuildClonedInstance(Me, UniversalShips), Ship))
-
             'Calculate leftover production pts
             ProductionPoints -= CurrentlyBuilding.Complexity
             Return True
@@ -121,4 +118,9 @@
         Return False
 
     End Function
+
+    Public Overridable Sub Claim(Planet As Planet)
+        Me.Planets.Add(Planet)
+    End Sub
+
 End Class

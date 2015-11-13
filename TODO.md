@@ -6,6 +6,10 @@ Notes on little touches to implement, and ideas for how to do some of the big fe
 
  * Fleet of a single ship forming when disbanded fleet members move away
  
+## Unit tests
+
+There are currenly: **9** unit tests and they **pass**!
+
 ## Planet capture
 
 When a ship stops moving and its target is a non-friendly planet, begin planet capture

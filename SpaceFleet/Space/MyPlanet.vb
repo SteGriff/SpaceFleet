@@ -38,6 +38,15 @@
 
     End Sub
 
+    Sub New(Planet As Planet)
+        MyBase.New(Planet.Name, Planet.Location, Planet.Population, Planet.Capacity, Planet.Resources, Planet.Colour, Planet.Art)
+
+        Me.Focus = ProductionFocus.Balanced
+        Me.MyResearch = 1
+        Me.Income = 1
+
+    End Sub
+
 
     Function GrowPopulation() As Decimal
 

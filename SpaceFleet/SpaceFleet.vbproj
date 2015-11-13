@@ -85,11 +85,11 @@
     <Compile Include="CommsMessage.vb" />
     <Compile Include="Players\Enemy.vb" />
     <Compile Include="Extensions.vb" />
-    <Compile Include="Ships\FleetX.vb" />
     <Compile Include="Players\Human.vb" />
     <Compile Include="Interfaces\ITransponding.vb" />
     <Compile Include="Interfaces\IConsoleEntity.vb" />
     <Compile Include="Map.vb" />
+    <Compile Include="ResearchAdvisory.vb" />
     <Compile Include="Ships\ShipOrgUnit.vb" />
     <Compile Include="Space\MyPlanet.vb" />
     <Compile Include="SelectionModel.vb" />
@@ -102,7 +102,7 @@
     <Compile Include="Players\Race.vb" />
     <Compile Include="Players\EnemyGeneration.vb" />
     <Compile Include="Ships\Ship.vb" />
-    <Compile Include="SpaceBattle.vb" />
+    <Compile Include="Combat\SpaceBattle.vb" />
     <Compile Include="SpaceFleet.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">

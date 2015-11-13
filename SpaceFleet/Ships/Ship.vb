@@ -4,12 +4,12 @@
     Public Name As String
     Public DesignName As String
     Public Guid As Guid
-    Public HP As Byte
-    Public MaxHP As Byte
+    Public HP As Integer
+    Public MaxHP As Integer
     Public OrgUnit As ShipOrgUnit
 
-    Public Attack As Byte()
-    Public Defence As Byte()
+    Public Attack As Integer()
+    Public Defence As Integer()
 
     Public Const InfoTemplate As String = "{0,-24}{1,-6}{2,-12}{3,-12}{4,-8}"
 
@@ -39,7 +39,7 @@
 
     End Sub
 
-    Sub New(ByVal DesignName As String, ByVal HP As Byte, ByVal Warp As Byte, Attack As Byte(), Defence As Byte())
+    Sub New(ByVal DesignName As String, ByVal HP As Byte, ByVal Warp As Byte, Attack As Integer(), Defence As Integer())
 
         AssignId()
         Me.DesignName = DesignName
@@ -126,7 +126,7 @@
         End Get
     End Property
 
-    Public Sub FireOn(Target As Ship)
+    Public Function FireOn(Target As Ship, AllShips As List(Of ShipOrgUnit)) As Boolean
 
         Console.WriteLine()
         Me.WriteName()
@@ -139,7 +139,7 @@
         Dim BestWeapon As WeaponType = WeaponType.Laser
 
         For W As Integer = 0 To 2
-            Dim ThisDamage As Integer = Me.Attack(W) - Target.Defence(W)
+            Dim ThisDamage As Integer = CInt(Me.Attack(W)) - Target.Defence(W)
             Damages(W) = ThisDamage
 
             'Console.WriteLine("  {0} would do {1} damage", CType(W, WeaponType).ToString(), ThisDamage)
@@ -156,13 +156,21 @@
         Threading.Thread.Sleep(500)
         Console.WriteLine("  ...{0} dealt {1} damage!", BestWeapon.ToString(), BestDamage)
 
-        If (Target.HP <= 0) Then
+        If (Target.NoHealth) Then
+
+            Target.Die(AllShips)
+
             Console.Write("  ...")
             Target.WriteName()
             Console.WriteLine(" was destroyed!!")
+
+            Return True
+
         End If
 
-    End Sub
+        Return False
+
+    End Function
 
     Public Sub Die(AllShips As List(Of ShipOrgUnit))
 

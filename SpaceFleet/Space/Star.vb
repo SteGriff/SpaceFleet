@@ -10,7 +10,11 @@
     Public Sub New(Index As Integer, PlanetsHaveGreekLetters As Boolean)
 
         Me.Index = Index
-        Me.Location = Index * (10 + Rnd(10)) * (1 + Rnd(2))
+
+        Dim DistanceMultiplier As Integer = 10 + Rnd(10)
+        Dim CosyFactor As Decimal = (1 + (Rnd(4) / 8))
+        Me.Location = CLng(Index * DistanceMultiplier * CosyFactor)
+
         Me.PlanetsHaveGreekLetters = PlanetsHaveGreekLetters
         Me.Planets = New List(Of Planet)
         Me.PotentialRaceNames = New List(Of String)

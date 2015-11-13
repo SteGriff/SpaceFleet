@@ -900,7 +900,7 @@ Module SpaceFleet
             For Each S In CombatUnits
 
                 'Handle battles
-                Dim Battle As New SpaceBattle(S.Location)
+                Dim Battle As New SpaceBattle(S.Location, AddressOf Console.ReadLine)
                 Battle.Fight(AllShips)
 
                 'Collection modified, so we can't continue

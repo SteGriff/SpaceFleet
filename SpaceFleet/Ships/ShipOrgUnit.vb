@@ -311,6 +311,7 @@ Public Class ShipOrgUnit
                 'We have stopped on the same spot as an allied ship
                 ' Join her fleet
                 E.Absorb(Me, AllShips)
+                ReportMessages.Add(String.Format("{0} merged into {1}", Me.Name, E.Name))
                 Return ForLoopTransition.ExitFor
 
             End If
