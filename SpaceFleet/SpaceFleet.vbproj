@@ -82,6 +82,7 @@
     <Import Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArmourType.vb" />
     <Compile Include="CommsMessage.vb" />
     <Compile Include="Players\Enemy.vb" />
     <Compile Include="Extensions.vb" />
@@ -90,7 +91,10 @@
     <Compile Include="Interfaces\IConsoleEntity.vb" />
     <Compile Include="Map.vb" />
     <Compile Include="ResearchAdvisory.vb" />
+    <Compile Include="ShipMenus.vb" />
+    <Compile Include="Ships\ShipFactory.vb" />
     <Compile Include="Ships\ShipOrgUnit.vb" />
+    <Compile Include="SpaceMaths.vb" />
     <Compile Include="Space\MyPlanet.vb" />
     <Compile Include="SelectionModel.vb" />
     <Compile Include="Space\Planet.vb" />

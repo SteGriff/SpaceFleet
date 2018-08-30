@@ -1,7 +1,5 @@
 ﻿Imports Microsoft.VisualStudio.TestTools.UnitTesting
-
 Imports SpaceFleet
-
 
 Namespace SpaceFleet.Tests
 

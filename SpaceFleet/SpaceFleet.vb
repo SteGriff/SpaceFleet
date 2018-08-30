@@ -10,7 +10,8 @@ Module SpaceFleet
     ' Stephen Griffiths 2011 - 2015
 
     Dim Randomiser As Random
-    Public ReportMessages As New List(Of String)
+    Public NewReportMessages As New List(Of String)
+    Public LastReportMessages As New List(Of String)
 
     Sub Main()
 
@@ -60,7 +61,10 @@ Module SpaceFleet
         Dim Week As Integer = 0
         Dim GameOver As Boolean = False
         Dim TurnTaken As Boolean = True
-        Dim CommsMessages As New List(Of CommsMessage)
+        Dim LastCommsMessages As New List(Of CommsMessage)
+        Dim NewCommsMessages As New List(Of CommsMessage)
+        Dim PopulationGrowth As Decimal = 0
+        Dim ShipJustBuilt As Boolean = False
 
         Do Until GameOver
 
@@ -69,7 +73,7 @@ Module SpaceFleet
             If TurnTaken Then
 
                 'Do civilisation growth
-                Dim PopulationGrowth As Decimal = 0
+                PopulationGrowth = 0
 
                 For Each P As Planet In You.Planets
                     'This is a belt and brace check... it really should be MyPlanet
@@ -87,13 +91,13 @@ Module SpaceFleet
                 'Update production
                 You.ProductionPoints += Totals.ProductionIncome
 
-                Dim ShipJustBuilt As Boolean = You.TryBuildShip(AllShips)
+                ShipJustBuilt = You.TryBuildShip(AllShips)
 
                 'Update technology and get level-up flag
                 You.Technologies(You.Researching).ImproveAndCheckAdvancement(Totals.TechIncome, You.Technologies)
                 You.Money = CInt(You.Money + (Totals.CashIncome * TaxRate))
 
-                ProcessMovement(AllShips, You, Enemies, Planets, CommsMessages)
+                ProcessMovement(AllShips, You, Enemies, Planets, NewCommsMessages)
                 ProcessCombat(AllShips)
                 Debug.WriteLine("")
 
@@ -103,17 +107,19 @@ Module SpaceFleet
 
                 If Week > 0 Then
 
-                    If (CommsMessages.Count > 0) Then
-                        CommsReport(CommsMessages)
-                        CommsMessages.Clear()
+                    If (NewCommsMessages.Count > 0) Then
+                        CommsReport(NewCommsMessages, AddressOf PressReturn)
+                        LastCommsMessages = NewCommsMessages.Select(Of CommsMessage)(Function(m) m).ToList()
+                        NewCommsMessages.Clear()
 
                         'Refresh screen
                         Readout(Week, You, Totals)
                     End If
 
                     'Give weekly report if this is not the first turn
-                    WeeklyReport(Week, You, PopulationGrowth, Totals, ShipJustBuilt, ReportMessages)
-                    ReportMessages.Clear()
+                    WeeklyReport(Week, You, PopulationGrowth, Totals, ShipJustBuilt, NewReportMessages, AddressOf PressReturn)
+                    LastReportMessages = NewReportMessages.Select(Of String)(Function(m) m).ToList()
+                    NewReportMessages.Clear()
 
                 End If
 
@@ -131,11 +137,16 @@ Module SpaceFleet
 
             Select Case Selection
 
+                Case ConsoleKey.N
+                    WeeklyReport(Week, You, PopulationGrowth, Totals, ShipJustBuilt, LastReportMessages, AddressOf NoWaitingDelegate)
+                    CommsReport(LastCommsMessages, AddressOf NoWaitingDelegate)
+                    PressReturn()
+
                 Case ConsoleKey.P
                     PlanetRoster(You.Planets)
 
                 Case ConsoleKey.S
-                    ShipRoster(You)
+                    ShipMenus.ShipRoster(You, AddressOf Feedback)
 
                 Case ConsoleKey.R
                     ResearchManagement(You, Totals.TechIncome)
@@ -199,8 +210,8 @@ Module SpaceFleet
         Console.WriteLine()
         Console.WriteLine("-------- ORDERS --------")
         Console.WriteLine()
-        Console.WriteLine("Sensor range: {0} parsecs (pc)", SensorRange)
-        Console.WriteLine("Furthest Explored Reach: {0}pc", FurthestExploredReach)
+        Console.WriteLine("Sensor range: {0} space miles (sm)", SensorRange)
+        Console.WriteLine("Furthest Explored Reach: {0}sm", FurthestExploredReach)
         Console.WriteLine()
 
         Dim Entities As New Map()
@@ -284,7 +295,7 @@ Module SpaceFleet
 
                 SelectedShip.Destination = Selection.Entity.Location
                 Console.WriteLine()
-                Console.WriteLine("Ok, sending {0} to {1}pc", SelectedShip.Name, Selection.Entity.Location)
+                Console.WriteLine("Ok, sending {0} to {1}sm", SelectedShip.Name, Selection.Entity.Location)
 
             End If
 
@@ -499,80 +510,6 @@ Module SpaceFleet
 
 #End Region
 
-#Region "Ships"
-
-    Sub ShipMenu()
-
-        Console.WriteLine("[L]ocation for newly built ships")
-        Console.WriteLine("[P]urchase current ship instantly")
-        Console.WriteLine("[D]esign ships")
-        Console.WriteLine("[Return] Done")
-
-    End Sub
-    Sub ShipRoster(You As Human)
-
-        Console.WriteLine("Now building the """ & You.CurrentlyBuilding.DesignName.ToUpper & """ design")
-        Console.WriteLine("Ships are produced on " & You.ConstructionPlanet.Name)
-        Console.WriteLine()
-
-        'Console.WriteLine("[Laser/Driver/Missiles]")
-
-        InvertConsole()
-        ShipColumnHeaders()
-        ResetConsole()
-
-        For Each Item In You.ShipOrgs.SelectMany(Function(s) (s.Ships))
-            Item.Info()
-        Next
-
-        Console.WriteLine()
-        ShipMenu()
-
-        Select Case UserChoice()
-
-            Case ConsoleKey.P
-                'Purchase
-
-            Case ConsoleKey.L
-                'Location
-                SetShipBuildLocation(You.Planets, You.ConstructionPlanet)
-
-            Case ConsoleKey.D
-                'Designs
-                ShipDesigner(You.CurrentlyBuilding)
-
-        End Select
-
-    End Sub
-
-    Private Sub SetShipBuildLocation(Planets As List(Of Planet), ByRef ConstructionPlanet As Planet)
-
-        Dim SelectedPlanet = SelectPlanet(Planets)
-
-        If SelectedPlanet Is Nothing Then
-            Feedback("ships will continue to be built on " & ConstructionPlanet.Name)
-            Return
-        End If
-
-        ConstructionPlanet = SelectedPlanet
-        Feedback("ships will be built on " + ConstructionPlanet.Name)
-
-    End Sub
-
-    Private Sub ShipDesigner(CurrentlyBuilding As Ship)
-
-
-
-    End Sub
-
-    Sub ShipColumnHeaders()
-
-        Console.WriteLine(Ship.InfoTemplate, "Name", "Warp", "Attack", "Defence", "HP/Max")
-
-    End Sub
-
-#End Region
-
 #Region "Research"
 
     Private Sub ResearchManagement(You As Player, TechIncome As Decimal)
@@ -628,6 +565,7 @@ Module SpaceFleet
 
     Sub MainMenu()
 
+        Console.WriteLine("[N]ews and Comms")
         Console.WriteLine("[P]lanets")
         Console.WriteLine("[S]hips")
         Console.WriteLine("[R]esearch")
@@ -677,7 +615,13 @@ Module SpaceFleet
         Console.ReadLine()
     End Sub
 
-    Private Sub WeeklyReport(Week As Integer, You As Player, PopulationChange As Decimal, Totals As SystemTotals, ShipJustBuilt As Boolean, Messages As List(Of String))
+    Private Sub WeeklyReport(Week As Integer,
+                             You As Player,
+                             PopulationChange As Decimal,
+                             Totals As SystemTotals,
+                             ShipJustBuilt As Boolean,
+                             Messages As List(Of String),
+                             WaitForInput As Action)
 
         Dim Technology = You.Technologies(You.Researching)
 
@@ -696,7 +640,7 @@ Module SpaceFleet
         Console.WriteLine("Our production was {0} pts for a new total of {1}", Totals.ProductionIncome, You.ProductionPoints)
 
         If ShipJustBuilt Then
-            Console.WriteLine("As we completed construction of '{0}'!", You.CurrentlyBuilding.Name)
+            Console.WriteLine("...and we completed construction of '{0}'!", You.CurrentlyBuilding.Name)
         End If
 
         If Messages.Count > 0 Then
@@ -706,7 +650,7 @@ Module SpaceFleet
             Next
         End If
 
-        PressReturn()
+        WaitForInput()
 
     End Sub
 
@@ -787,7 +731,7 @@ Module SpaceFleet
 
     End Sub
 
-    Private Sub CommsReport(Messages As List(Of CommsMessage))
+    Private Sub CommsReport(Messages As List(Of CommsMessage), WaitForInput As Action)
 
         Dim MNum As Integer = 1
         Dim TotalM As Integer = Messages.Count
@@ -817,8 +761,7 @@ Module SpaceFleet
             End Select
 
             Console.WriteLine()
-            Console.WriteLine("Press a key...")
-            Console.ReadLine()
+            WaitForInput()
 
             MNum += 1
 
@@ -913,6 +856,10 @@ Module SpaceFleet
 
         Loop
 
+    End Sub
+
+    Public Sub NoWaitingDelegate()
+        Return
     End Sub
 
 End Module

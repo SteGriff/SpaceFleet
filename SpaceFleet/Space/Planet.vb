@@ -79,7 +79,7 @@
         Console.ForegroundColor = Me.Colour
         Console.Write(Me.Art)
         ResetConsole()
-        Console.WriteLine(vbTab & "{0} {1}pc", Me.Name, Me.Location)
+        Console.WriteLine(vbTab & "{0} {1}sm", Me.Name, Me.Location)
 
     End Sub
 

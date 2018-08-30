@@ -99,6 +99,7 @@
     <Compile Include="Ships\ShipOrgUnitTests.vb" />
     <Compile Include="Ships\ShipTests.vb" />
     <Compile Include="SpaceBattleTests.vb" />
+    <Compile Include="SpaceMathsTests.vb" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="My Project\Resources.resx">

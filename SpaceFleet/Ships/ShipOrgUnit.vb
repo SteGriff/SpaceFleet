@@ -147,9 +147,9 @@ Public Class ShipOrgUnit
         Dim LocationString As String = ""
         If Moving() Then
             'TODO show number of weeks left in transport
-            LocationString = String.Format("{0}pc -> {1}pc", Me.Location, Me.Destination)
+            LocationString = String.Format("{0}sm -> {1}sm", Me.Location, Me.Destination)
         Else
-            LocationString = String.Format("{0}pc", Me.Location)
+            LocationString = String.Format("{0}sm", Me.Location)
         End If
 
         If TypeOf Me.Owner Is Human Then
@@ -165,12 +165,12 @@ Public Class ShipOrgUnit
         'Reset console defaults
         ResetConsole()
 
-        Console.Write(" {0}pc", Me.Location)
+        Console.Write(" {0}sm", Me.Location)
 
         'Write destination if the ship has belongs to the player
         If Me.Destination <> Me.Location _
             AndAlso TypeOf Me.Owner Is Human Then
-            Console.Write(" -> {0}pc", Me.Destination)
+            Console.Write(" -> {0}sm", Me.Destination)
         End If
 
         'End the line
@@ -238,7 +238,7 @@ Public Class ShipOrgUnit
 
         End If
 
-        Debug.WriteLineIf(Location < 50, String.Format("{0} moved from {1} to {2}pc", Me.Name, OldLocation, Location))
+        Debug.WriteLineIf(Location < 50, String.Format("{0} moved from {1} to {2}sm", Me.Name, OldLocation, Location))
 
         'Check ship interactions - did we pass another ship? Shall we fleet/battle?
         'There will be unprocessed ships if the AllShips collection had to change
@@ -311,7 +311,7 @@ Public Class ShipOrgUnit
                 'We have stopped on the same spot as an allied ship
                 ' Join her fleet
                 E.Absorb(Me, AllShips)
-                ReportMessages.Add(String.Format("{0} merged into {1}", Me.Name, E.Name))
+                NewReportMessages.Add(String.Format("{0} merged into {1}", Me.Name, E.Name))
                 Return ForLoopTransition.ExitFor
 
             End If
